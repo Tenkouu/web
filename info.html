@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" class="scrollbar-hidden scale-wrapper">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookstore Search Page</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="client/css/styles.css">
+</head>
+<body>
+  <store-header></store-header>
+
+  <main class="info-main">
+    <aside class="info-aside">
+      <filter-list></filter-list>
+    </aside>
+    <div class="col-span-8">
+      <book-list></book-list>
+      <pagination-control></pagination-control>
+    </div>
+  </main>
+
+  <store-footer></store-footer>
+  <shopping-cart></shopping-cart>
+  
+  <!-- Scripts -->
+  <script type="module" src="client/js/cart-service.js"></script>
+  <script type="module" src="client/js/app.js"></script>
+  <script type="module" src="client/components/store-header.js"></script>
+  <script type="module" src="client/components/filter-list.js"></script>
+  <script type="module" src="client/components/book-list.js"></script>
+  <script type="module" src="client/components/pagination-control.js"></script>
+  <script type="module" src="client/components/store-footer.js"></script>
+  <script type="module" src="client/components/shopping-cart.js"></script>
+  <script type="module" src="client/js/theme-toggle.js"></script> 
+
+</body>
+</html>

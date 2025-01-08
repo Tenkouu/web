@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" class="scrollbar-hidden scale-wrapper">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=0.8">
+  <title>Document</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="client/css/styles.css">
+</head>
+<body>
+  <!-- Replace your static header with the store-header web component -->
+  <store-header></store-header>
+
+  <main>
+    <article class="centerfold">
+      <img src="client/img/77.jpg" alt="Goldeline Cover" class="centerfold-image">
+
+      <section class="centerfold-content">
+        <h2 class="solo-book-title">GOLDELINE</h2>
+        <section class="solo-book-details">
+          <p class="solo-book-text">by Jimmy Cajoleas</p>
+          <p class="solo-book-text">Fiction</p>
+        </section>
+        <p class="centerfold-description">
+          Perfect for fans of <em>The Girl Who Drank the Moon</em> and <em>The Thickety</em>, this spellbinding
+          story follows a young girl named Goldeline on an adventure through a fairy tale forest
+          filled with dark and wondrous magic.
+        </p>
+
+        <section class="pricing">
+          <p class="pricing-current">$1.99</p>
+          <p class="pricing-original">$8.99</p>
+          <span class="pricing-save">Save 78%</span>
+        </section>
+
+        <div class="two-buttons">
+          <button class="action-button">
+            <i class="fa-solid fa-cart-shopping action-button-icon"></i>
+            САГСЛАХ
+          </button>
+
+          <button class="action-button">
+            <i class="fa-solid fa-circle-info action-button-icon"></i>
+            ДЭЛГЭРЭНГҮЙ
+          </button>
+        </div>
+      </section>
+    </article>
+
+    <article>
+      <div class="selection">
+        <h4 class="selection-title">Редакцын сонголт</h4>
+
+        <!-- Scroll Buttons -->
+        <div class="scroll-buttons">
+          <button onclick="scrollBack()" class="icon-button arrow">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+
+          <button onclick="scrollRight()" class="icon-button">
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <div id="bookContainer" class="book-scroll">
+        <img src="client/img/1.jpg" alt="All This Time" class="selection-image">
+        <img src="client/img/2.jpg" alt="Misery" class="selection-image">
+        <img src="client/img/3.jpg" alt="Toil & Trouble" class="selection-image">
+        <img src="client/img/4.jpg" alt="Wicked Like a Wildfire" class="selection-image">
+        <img src="client/img/5.jpg" alt="Sunrise on the Reaping" class="selection-image">
+        <img src="client/img/6.jpg" alt="All This Time" class="selection-image">
+        <img src="client/img/7.jpg" alt="Misery" class="selection-image">
+        <img src="client/img/8.jpg" alt="Toil & Trouble" class="selection-image">
+        <img src="client/img/9.jpg" alt="Wicked Like a Wildfire" class="selection-image">
+        <img src="client/img/10.jpg" alt="Sunrise on the Reaping" class="selection-image last">
+      </div>
+    </article>
+
+    <img src="client/img/ad.png" class="ad-image">
+
+    <article class="category-article">
+      <h4 class="selection-title">Сор ангилалууд</h4>
+      <div class="category-wrapped">
+        <div class="category-box col-span-4">
+          <h2 class="category-header">Бестселлер</h2>
+          <ul class="category-list">
+            <li class="cursor-pointer">Шилдэг нийтийн ном</li>
+            <li class="cursor-pointer">Шилдэг гадаад ном</li>
+            <li class="cursor-pointer">Шилдэг хүүхдийн ном</li>
+            <li class="cursor-pointer">Шилдэг цахим ном</li>
+            <li class="cursor-pointer">Шилдэг аудио ном</li>
+          </ul>
+        </div>
+
+        <div class="category-box col-span-3">
+          <h2 class="category-header">Уран зохиол</h2>
+          <ul class="category-list">
+            <li class="cursor-pointer">Орчин үеийн зохиол</li>
+            <li class="cursor-pointer">Адал явдалт зохиол</li>
+            <li class="cursor-pointer">Романс зохиол</li>
+            <li class="cursor-pointer">Яруу найраг</li>
+            <li class="cursor-pointer">Сонгодог зохиол</li>
+          </ul>
+        </div>
+
+        <div class="category-box col-span-3">
+          <h2 class="category-header">Сэтгэл зүй</h2>
+          <ul class="category-list">
+            <li class="cursor-pointer">Хөгжлийн сэтгэл зүй</li>
+            <li class="cursor-pointer">Гэр бүлийн сэтгэл зүй</li>
+            <li class="cursor-pointer">Эмчилгээний сэтгэл зүй</li>
+            <li class="cursor-pointer">Нийгмийн сэтгэл зүй</li>
+            <li class="cursor-pointer">Хүүхдийн сэтгэл зүй</li>
+          </ul>
+        </div>
+
+        <div class="category-box col-span-4">
+          <h2 class="category-header">Шинэ хэвлэл</h2>
+          <ul class="category-list">
+            <li class="cursor-pointer">Шинэ нийтийн ном</li>
+            <li class="cursor-pointer">Шинэ гадаад ном</li>
+            <li class="cursor-pointer">Шинэ хүүхдийн ном</li>
+            <li class="cursor-pointer">Шинэ цахим ном</li>
+            <li class="cursor-pointer">Шинэ аудио ном</li>
+          </ul>
+        </div>
+
+        <div class="category-box col-span-3">
+          <h2 class="category-header">Хэл шинжлэл</h2>
+          <ul class="category-list">
+            <li class="cursor-pointer">Англи хэл шинжлэл</li>
+            <li class="cursor-pointer">Орос хэл шинжлэл</li>
+            <li class="cursor-pointer">Хятад хэл шинжлэл</li>
+            <li class="cursor-pointer">Япон хэл шинжлэл</li>
+            <li class="cursor-pointer">Солонгос хэл шинжлэл</li>
+          </ul>
+        </div>
+
+        <div class="category-box col-span-3">
+          <h2 class="category-header">Түүх</h2>
+          <ul class="category-list">
+            <li class="cursor-pointer">Монголын түүх</li>
+            <li class="cursor-pointer">Өрнийн түүх</li>
+            <li class="cursor-pointer">Дорнын түүх</li>
+            <li class="cursor-pointer">Дайны түүх</li>
+            <li class="cursor-pointer">Эдийн засгийн түүх</li>
+          </ul>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <!-- Replace your static footer with the store-footer web component -->
+  <store-footer></store-footer>
+  <shopping-cart></shopping-cart>
+  
+  <script>
+    const scrollAmount = 370;
+    function scrollBack() {
+      document.getElementById('bookContainer').scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+    }
+    function scrollRight() {
+      document.getElementById('bookContainer').scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  </script>
+
+  <script type="module" src="client/js/cart-service.js"></script>
+  <script type="module" src="client/js/app.js"></script>
+  <script type="module" src="client/components/store-header.js"></script>
+  <script type="module" src="client/components/store-footer.js"></script>
+  <script type="module" src="client/components/shopping-cart.js"></script>
+  <script type="module" src="client/js/theme-toggle.js"></script>
+
+</body>
+</html>

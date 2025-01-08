@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" class="scrollbar-hidden scale-wrapper">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookstore Admin Page</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="client/css/styles.css">
+</head>
+<body>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <!-- Sidebar -->
+        <aside class="admin-aside">
+            <!-- Profile Section -->
+            <div class="profile-section">
+                <img class="profile-icon" src="client/img/73.jpg" alt="Admin Profile">
+                <p class="profile-name">Админ</p>
+            </div>
+            <!-- Divider -->
+            <div class="h-divider"></div>
+            <!-- Menu Buttons -->
+            <button class="menu-button">Ном</button>
+        </aside>
+
+        <!-- Vertical Divider -->
+        <div class="v-divider"></div>
+
+        <!-- Admin Content -->
+        <div class="admin-content">
+            <!-- Header Row -->
+            <div class="admin-header">
+                <p class="admin-header-title">Title & Author</p>
+                <p class="admin-book-category">Category</p>
+                <p class="admin-book-price">Price</p>
+                <button class="admin-add-button">Нэмэх</button>
+            </div>
+
+            <!-- Book List Section -->
+            <admin-books></admin-books>
+
+            <!-- Pagination -->
+            <pagination-control></pagination-control>
+        </div>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          const addButton = document.querySelector('.admin-add-button');
+          const adminBooks = document.querySelector('admin-books');
+          if (addButton && adminBooks) {
+            addButton.addEventListener('click', () => {
+              adminBooks.toggleForm();
+            });
+          }
+        });
+      </script>
+      
+    <script type="module" src="client/js/admin.js"></script>
+    <script type="module" src="client/components/book-list.js"></script>
+    <script type="module" src="client/components/pagination-control.js"></script>
+    <script type="module" src="client/components/admin-books.js"></script>
+
+</body>
+</html>
