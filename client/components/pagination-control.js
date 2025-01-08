@@ -1,24 +1,30 @@
-// pagination-control.js
+/****
+ * pagination-control.js
+ *
+ * - Pagination UI-ийг харуулна
+ * - Нийт хуудсын тоо болон одоогийн хуудасны мэдээлэлд тулгуурлана
+ * - Хуудасны өөрчлөлт хийхэд URL болон дэлгэц шинэчлэгдэнэ
+ ****/
 
 /**
- * Renders the pagination UI into the #pagination container.
- * Expects:
- *   window.currentPage  (number)
- *   window.totalPages   (number)
+ * Pagination UI-г #pagination контейнерт оруулна.
+ * Хүлээж авах параметрүүд:
+ *   - window.currentPage  (тоон утга: одоогийн хуудас)
+ *   - window.totalPages   (тоон утга: нийт хуудсууд)
  */
 function renderPagination() {
   const paginationContainer = document.getElementById("pagination");
   if (!paginationContainer) {
-    console.error("Error: 'pagination' container not found.");
+    console.error("Алдаа: 'pagination' контейнер олдсонгүй.");
     return;
   }
 
-  const totalPages = window.totalPages || 1;
-  const currentPage = window.currentPage || 1;
+  const totalPages = window.totalPages || 1; // Нийт хуудсууд, анхдагч 1
+  const currentPage = window.currentPage || 1; // Одоогийн хуудас, анхдагч 1
 
   let paginationHTML = "";
 
-  // Left Arrow
+  // Зүүн сум
   paginationHTML += `
     <button 
       class="pagination-arrow"
@@ -30,7 +36,7 @@ function renderPagination() {
   `;
 
   if (totalPages <= 3) {
-    // Render all pages if the total is small
+    // Хэрэв нийт хуудас бага байвал бүгдийг харуулах
     for (let i = 1; i <= totalPages; i++) {
       paginationHTML += `
         <button
@@ -40,7 +46,7 @@ function renderPagination() {
       `;
     }
   } else {
-    // First page
+    // Эхний хуудас
     paginationHTML += `
       <button
         class="pagination-number ${currentPage === 1 ? "active" : ""}"
@@ -48,8 +54,8 @@ function renderPagination() {
       >1</button>
     `;
 
-    // If current page is near the start
     if (currentPage <= 3) {
+      // Ойролцоох хуудаснуудыг харуулах
       for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
         paginationHTML += `
           <button
@@ -61,9 +67,8 @@ function renderPagination() {
       if (totalPages > 4) {
         paginationHTML += `<button class="pagination-ellipsis" disabled>...</button>`;
       }
-    }
-    // If current page is near the end
-    else if (currentPage >= totalPages - 2) {
+    } else if (currentPage >= totalPages - 2) {
+      // Төгсгөлд ойрхон бол
       paginationHTML += `<button class="pagination-ellipsis" disabled>...</button>`;
       for (let i = totalPages - 2; i < totalPages; i++) {
         paginationHTML += `
@@ -73,9 +78,8 @@ function renderPagination() {
           >${i}</button>
         `;
       }
-    }
-    // Middle
-    else {
+    } else {
+      // Дунд хэсэгт байгаа тохиолдолд
       paginationHTML += `
         <button class="pagination-ellipsis" disabled>...</button>
         <button
@@ -88,7 +92,7 @@ function renderPagination() {
       `;
     }
 
-    // Last page
+    // Сүүлийн хуудас
     paginationHTML += `
       <button
         class="pagination-number ${currentPage === totalPages ? "active" : ""}"
@@ -97,7 +101,7 @@ function renderPagination() {
     `;
   }
 
-  // Right Arrow
+  // Баруун сум
   paginationHTML += `
     <button 
       class="pagination-arrow"
@@ -110,40 +114,42 @@ function renderPagination() {
     </button>
   `;
 
-  paginationContainer.innerHTML = paginationHTML;
+  paginationContainer.innerHTML = paginationHTML; // HTML-ийг контейнерт оруулах
 }
 
 /**
- * Utility: sets `?page=...` in URL.
+ * URL дэх page параметрийг шинэчлэх
+ * @param {number} pageNumber Хуудасны дугаар
  */
 function setPageParamInURL(pageNumber) {
   const params = new URLSearchParams(window.location.search);
-  params.set("page", pageNumber);
-  window.history.replaceState({}, "", `?${params.toString()}`);
+  params.set("page", pageNumber); // Page параметрийг тохируулах
+  window.history.replaceState({}, "", `?${params.toString()}`); // URL-г шинэчлэх
 }
 
 /**
- * Called by the pagination buttons.  
- * - Updates global window.currentPage
- * - Updates URL
- * - Calls the global callback `window.onPaginationChange()`
+ * Pagination товчлуур дээр дарагдсан үед дуудагдана.
+ * - window.currentPage-г шинэчлэх
+ * - URL-г шинэчлэх
+ * - window.onPaginationChange() функцыг дуудах
+ * @param {number} pageNumber Хуудасны дугаар
  */
 function changePage(pageNumber) {
   window.currentPage = pageNumber;
   setPageParamInURL(pageNumber);
 
   if (typeof window.onPaginationChange === "function") {
-    window.onPaginationChange();
+    window.onPaginationChange(); // Хуудасны өөрчлөлтөд тохирох функц
   }
 }
 
-// Expose to global
+// Глобал функц болгон бүртгэх
 window.renderPagination = renderPagination;
 window.changePage = changePage;
 
 /**
- * <pagination-control> custom element
- * Renders a <div> with id="pagination" (where we insert our pagination HTML).
+ * <pagination-control> custom элемент
+ * Pagination-г харуулах <div> үүсгэнэ.
  */
 class PaginationControl extends HTMLElement {
   connectedCallback() {
@@ -155,4 +161,5 @@ class PaginationControl extends HTMLElement {
   }
 }
 
+// <pagination-control> элементийг бүртгэх
 customElements.define("pagination-control", PaginationControl);

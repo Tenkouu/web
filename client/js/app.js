@@ -1,55 +1,79 @@
-import { CartService } from './cart-service.js'; // Ensure this path matches your folder structure
+import { CartService } from './cart-service.js'; 
+/**
+ * Энэ скрипт клиент талын номын харуулалт болон холбогдох үйлдлийг зохицуулна.
+ * 
+ * Үндсэн үүрэг:
+ * - `CartService` ашиглан худалдан авалтын сагсыг эхлүүлэх.
+ * - API-аас номын өгөгдөл татах.
+ * - Хуудаслалтыг зохицуулах логик.
+ * - Филтер байгаа эсэхээс хамаарч өгөгдөл боловсруулах.
+ */
 
-let currentPage = 1;
-const booksPerPage = 8;
+// Номыг хуудаслахад ашиглах глобал хувьсагч
+let currentPage = 1; 
+const booksPerPage = 8; // Нэг хуудсанд харуулах номын тоо
 
-// Make them global so other scripts can use them:
+// Эдгээрийг глобал болгох
 window.currentPage = currentPage;
 window.booksPerPage = booksPerPage;
-window.books = [];
+window.books = []; // Номын өгөгдлийг хадгалах массив
 
-// Function to handle pagination when no filters are applied
+/**
+ * Филтер байхгүй үед хуудаслалтын логикийг зохицуулна.
+ */
 function defaultPaginationHandler() {
-    // Ensure `renderBooks` is defined
+    // `renderBooks` функц байгаа эсэхийг шалгах.
     if (typeof renderBooks !== 'function') return;
 
     const page = window.currentPage || 1;
     const startIndex = (page - 1) * window.booksPerPage;
     const endIndex = startIndex + window.booksPerPage;
 
+    // Номын хуудаслах хэсгийг тасдаж харуулах.
     const pageOfBooks = window.books.slice(startIndex, endIndex);
     renderBooks(pageOfBooks);
 }
 
-// Initialize the cart at startup
+/**
+ * DOM-ыг ачаалсны дараа эхний тохиргоо хийх.
+ */
 document.addEventListener('DOMContentLoaded', () => {
-    // Load cart items from storage
+    // Картын өгөгдлийг хадгалагдсан сангаас унших.
     CartService.initializeCart();
 
-    // Fetch books from the API
+    /**
+     * API-аас номын өгөгдөл татах.
+     */
     fetch('/api/books')
         .then(response => {
+            // Хариу OK биш бол алдаа шидэх.
             if (!response.ok) {
-                throw new Error(`Server error: ${response.status}`);
+                throw new Error(`Серверийн алдаа: ${response.status}`);
             }
-            return response.json();
+            return response.json(); // JSON формат руу хөрвүүлэх.
         })
         .then(data => {
+            // Номын өгөгдлийг глобал хувьсагчид хадгалах.
             window.books = data.books || [];
 
-            // Use pagination or render all books
+            /**
+             * Филтер байгаа эсэхийг шалгаж тохирох функц дуудах.
+             * - Хэрэв филтер байвал `applyFiltersFromQuery` ашиглах.
+             * - Үгүй бол `defaultPaginationHandler` ашиглах.
+             */
             if (typeof applyFiltersFromQuery === 'function') {
                 window.onPaginationChange = applyFiltersFromQuery;
                 if (typeof attachListeners === 'function') {
-                    attachListeners();
+                    attachListeners(); // Хэрэглэгчийн үйлдлийг сонсох сонсогч суулгах.
                 }
-                applyFiltersFromQuery();
+                applyFiltersFromQuery(); // Филтерээр номын өгөгдөл шүүх.
             } else {
                 window.onPaginationChange = defaultPaginationHandler;
-                defaultPaginationHandler();
+                defaultPaginationHandler(); // Хуудаслалтыг шууд хийх.
             }
         })
         .catch(err => {
-            console.error('Error fetching books:', err);
+            // API-тай холбоотой алдааг харуулах.
+            console.error('Ном татахад алдаа гарлаа:', err);
         });
 });

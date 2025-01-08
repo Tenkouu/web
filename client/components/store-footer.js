@@ -1,4 +1,3 @@
-// Example: <store-footer></store-footer>
 class StoreFooter extends HTMLElement {
     connectedCallback() {
       this.innerHTML = `

@@ -1,4 +1,3 @@
-// Example: <store-header></store-header>
 class StoreHeader extends HTMLElement {
     connectedCallback() {
       this.innerHTML = `

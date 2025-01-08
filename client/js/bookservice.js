@@ -1,72 +1,81 @@
 /**
  * BookService класс
- * API-тай харилцах үндсэн сервис
- * - Номын жагсаалт авах
- * - Нэг номын мэдээлэл авах
- * - Шинэ ном нэмэх
- * - Номын мэдээлэл засах
- * - Ном устгах зэрэг үйлдлүүдийг хийнэ
+ * API-тай харилцах үндсэн сервис.
+ * Энэ класс нь номын жагсаалт авах, нэг номын мэдээлэл авах,
+ * ном нэмэх, номын мэдээлэл засах, ном устгах зэрэг үйлдлийг хийдэг.
  */
 
 export class BookService {
-    // Номын жагсаалт авах
+    // Номын жагсаалтыг серверээс татах.
     static async getBooks(params = {}) {
+        // API-д илгээх хүсэлтийг хийж, хариуг буцаана.
         return this._fetch('/api/books', params);
     }
 
-    // Нэг номын дэлгэрэнгүй мэдээлэл авах
+    // Нэг номын дэлгэрэнгүй мэдээллийг серверээс авах.
     static async getBookById(id) {
+        // ID ашиглан тодорхой номын мэдээлэл татах.
         return this._fetch(`/api/books/${id}`);
     }
 
-    // Шинэ ном нэмэх
+    // Шинэ номыг сервер рүү илгээж бүртгэх.
     static async addBook(bookData) {
+        // Номын өгөгдлийг JSON форматаар илгээнэ.
         return this._fetch('/api/books', null, {
-          method: 'POST',
+          method: 'POST', // Ном нэмэх HTTP арга.
           headers: {
-            'Content-Type': 'application/json', // Ensures the server knows it's JSON
+            'Content-Type': 'application/json', // Серверт JSON өгөгдөл илгээж байгааг мэдэгдэнэ.
           },
-          body: JSON.stringify(bookData), // Sends the book data as JSON
-        });
-      }
-
-    // Номын мэдээлэл шинэчлэх
-    static async updateBook(id, bookData) {
-        return this._fetch(`/api/books/${id}`, null, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(bookData)
+          body: JSON.stringify(bookData), // Номын өгөгдлийг JSON болгон хөрвүүлэх.
         });
     }
 
-    // Ном устгах
+    // Номын мэдээллийг сервер дээр шинэчлэх.
+    static async updateBook(id, bookData) {
+        // ID ашиглан тодорхой номыг шинэчлэх.
+        return this._fetch(`/api/books/${id}`, null, {
+            method: 'PUT', // HTTP арга: PUT нь өгөгдлийг шинэчлэхэд ашиглагдана.
+            headers: {
+                'Content-Type': 'application/json' // JSON өгөгдөл илгээж байгааг серверт мэдэгдэнэ.
+            },
+            body: JSON.stringify(bookData) // Шинэ өгөгдлийг JSON болгон хөрвүүлэх.
+        });
+    }
+
+    // Номыг серверээс устгах.
     static async deleteBook(id) {
+        // Тодорхой ID бүхий номыг устгах хүсэлтийг серверт илгээх.
         return this._fetch(`/api/books/${id}`, null, { method: 'DELETE' });
     }
 
-    // Үндсэн fetch функц - бүх хүсэлтүүдэд ашиглагдана
+    // Бүх API хүсэлтүүдэд ашиглах үндсэн fetch функц.
     static async _fetch(endpoint, params = null, options = {}) {
+        // URL-ийг серверийн үндсэн хаягаар бүтээх.
         const url = new URL(endpoint, window.location.origin);
+
+        // Хэрэв параметр байвал URL-д нэмнэ.
         if (params) {
             Object.entries(params).forEach(([key, value]) => {
-                if (value) url.searchParams.set(key, value);
+                if (value) url.searchParams.set(key, value); // URL-д параметр нэмэх.
             });
         }
 
+        // Хүсэлтийн үндсэн тохиргоо.
         const defaultOptions = {
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json' // Бүх хүсэлтэд JSON форматыг зааж өгнө.
             }
         };
 
         try {
+            // Fetch ашиглан сервер рүү хүсэлт илгээх.
             const response = await fetch(url, { ...defaultOptions, ...options });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
+            // Хэрэв хариу OK биш бол алдаа шидэх.
+            if (!response.ok) throw new Error(`HTTP алдаа! Статус: ${response.status}`);
+            return await response.json(); // Хариуг JSON формат руу хөрвүүлж буцаана.
         } catch (error) {
-            throw new Error(`API request failed: ${error.message}`);
+            // Хэрэв хүсэлт амжилтгүй бол алдааг шидэх.
+            throw new Error(`API хүсэлт амжилтгүй боллоо: ${error.message}`);
         }
     }
 }

@@ -1,17 +1,28 @@
-// client/components/book-list.js
-import { CartService } from '../js/cart-service.js';
+/*******************************************************
+ * book-list.js
+ *
+ * - Номын жагсаалтыг харуулах
+ * - Номын дэлгэрэнгүй хуудас руу шилжих функцтэй
+ * - Сагсанд нэмэх товчтой
+ *******************************************************/
+import { CartService } from '../js/cart-service.js'; // Сагстай харилцах үйлчилгээ
 
+/**
+ * Номын жагсаалтыг харуулах
+ * @param {Array} bookList Номын массив
+ */
 function renderBooks(bookList) {
   const bookGrid = document.getElementById("book-grid");
   if (!bookGrid) {
-    console.error("Error: 'book-grid' element not found in the DOM.");
+    console.error("Алдаа: 'book-grid' элемент DOM-д олдсонгүй.");
     return;
   }
 
+  // Номын жагсаалтыг HTML-ээр харуулах
   bookGrid.innerHTML = bookList.length
     ? bookList
         .map((book) => {
-          // Convert review or rating to a float if present, fallback to 0
+          // Үнэлгээ эсвэл дүнг тооцоолох, байхгүй бол 0-г сонгох
           const ratingValue = parseFloat(
             book.review !== undefined
               ? book.review
@@ -50,24 +61,27 @@ function renderBooks(bookList) {
           `;
         })
         .join("")
-    : `<p class="not-available">No books available</p>`;
+    : `<p class="not-available">Номын мэдээлэл алга байна</p>`;
 
-  // If you do local pagination, slice here. Otherwise, if the server does pagination, no need.
+  // Хэрэв локал pagination ашиглаж байгаа бол энд slice хийх.
   document.querySelectorAll('.add-to-cart').forEach(button => {
     button.addEventListener('click', (event) => {
         const bookId = parseInt(event.target.dataset.id, 10);
         const book = bookList.find(b => b.id === bookId);
         if (book) {
-            CartService.addToCart(book);
+            CartService.addToCart(book); // Сагсанд нэмэх
         }
     });
-});
+  });
 }
 
-// Expose globally so other scripts can call them
+// Глобал функц болгон бүртгэх, бусад скриптээс дуудах боломжтой
 window.renderBooks = renderBooks;
 
-// The custom element that provides the #book-grid container
+/**
+ * <book-list> хэрэглэгчийн элементийг тодорхойлох
+ * Номын жагсаалтыг харуулахад зориулсан book-grid контейнерыг үүсгэдэг
+ */
 class BookList extends HTMLElement {
   connectedCallback() {
     this.innerHTML = `
@@ -76,12 +90,17 @@ class BookList extends HTMLElement {
   }
 }
 
+/**
+ * Номын дэлгэрэнгүй мэдээлэл рүү шилжих функц
+ * @param {number} bookId Номын ID
+ */
 function goToDetail(bookId) {
-  window.location = `book-detail.html?id=${bookId}`;
+  window.location = `book-detail.html?id=${bookId}`; // Номын дэлгэрэнгүй хуудас руу чиглүүлэх
 }
 
+// Глобал функц болгон бүртгэх
 window.renderBooks = renderBooks;
 window.goToDetail = goToDetail;
 
-
+// <book-list> элементийг бүртгэх
 customElements.define("book-list", BookList);

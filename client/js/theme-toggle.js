@@ -1,19 +1,30 @@
-// client/js/theme-toggle.js
+/**
+ * Theme Toggle
+ * - Dark ба Light theme-г хооронд нь сольж болдог функц.
+ * - Сонгосон theme-г localStorage-д хадгалдаг тул дахин ачаалсны дараа хадгалагдсан theme-ээр тохируулна.
+ * - .theme-toggle товчин дээр дарж theme-г солих боломжтой.
+ */
 
-document.addEventListener('DOMContentLoaded', () => {
-    const savedTheme = localStorage.getItem('themeMode');
-    if (savedTheme === 'dark') {
+ // DOM ачаалсны дараа theme-ийг тохируулах
+ document.addEventListener('DOMContentLoaded', () => {
+  // Өмнөх theme-ийг localStorage-оос авах
+  const savedTheme = localStorage.getItem('themeMode');
+  if (savedTheme === 'dark') {
+      // Dark mode-г тохируулах
       document.body.classList.add('dark-mode');
-    }
-  
-    // Suppose you have a .theme-toggle button or <i>moon icon in your header
-    const themeButton = document.querySelector('.theme-toggle'); 
-    if (themeButton) {
+  }
+
+  // Header доторх .theme-toggle товч эсвэл moon icon-ийг хайх
+  const themeButton = document.querySelector('.theme-toggle'); 
+  if (themeButton) {
+      // Theme солих товчинд сонсогч нэмэх
       themeButton.addEventListener('click', () => {
-        document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        localStorage.setItem('themeMode', isDark ? 'dark' : 'light');
+          // Dark mode-г toggle хийх
+          document.body.classList.toggle('dark-mode');
+
+          // Dark эсэхийг шалгах ба localStorage-д хадгалах
+          const isDark = document.body.classList.contains('dark-mode');
+          localStorage.setItem('themeMode', isDark ? 'dark' : 'light');
       });
-    }
-  });
-  
+  }
+});

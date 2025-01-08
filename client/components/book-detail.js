@@ -1,26 +1,41 @@
-import { CartService } from '../js/cart-service.js';
-import { renderCart } from '../components/shopping-cart.js'; // to update cart UI
+/***
+ * book-detail.js
+ *
+ * - Номын дэлгэрэнгүй мэдээллийг харуулах
+ * - Сагсанд ном нэмэх функцтэй
+ * - Буцах товчоор өмнөх хуудас руу шилжих
+ */
+import { CartService } from '../js/cart-service.js'; // Сагстай харилцах
+import { renderCart } from '../components/shopping-cart.js'; // Сагсны UI-г шинэчлэх
 
 class BookDetail extends HTMLElement {
+  // <book-detail> элемент DOM-д нэмэгдэх үед дуудагдана
   connectedCallback() {
-    this.renderSoloBook();
+    this.renderSoloBook(); // Номын дэлгэрэнгүй мэдээллийг харуулах
   }
 
+  /**
+   * Номын дэлгэрэнгүй мэдээллийг харуулах функц
+   */
   renderSoloBook() {
+    // URL-аас номын ID-г авах
     const params = new URLSearchParams(window.location.search);
     const bookId = parseInt(params.get("id"), 10);
 
+    // Хэрэв window.books хоосон байвал 100мс-ийн дараа дахин шалгах
     if (!window.books || window.books.length === 0) {
       setTimeout(() => this.renderSoloBook(), 100);
       return;
     }
 
+    // ID-аар номыг хайх
     const book = window.books.find((b) => b.id === bookId);
     if (!book) {
-      this.innerHTML = `<p>Sorry, book not found.</p>`;
+      this.innerHTML = `<p>Уучлаарай, ийм ном олдсонгүй.</p>`;
       return;
     }
     
+    // Номын дэлгэрэнгүй мэдээллийн HTML-ийг үүсгэх
     this.innerHTML = `
       <main class="solo-book-main">
         <img src="${book.cover_image}" alt="${book.title}" class="solo-book-image"/>
@@ -35,27 +50,27 @@ class BookDetail extends HTMLElement {
           <div class="solo-book-grid">
             <div class="solo-book-additional">
               <h6 class="solo-book-highlight">ISBN:</h6>
-              <p class="solo-book-text">${book.isbn || "N/A"}</p>
+              <p class="solo-book-text">${book.isbn || "Байхгүй"}</p>
             </div>
             <div class="solo-book-additional">
-              <h6 class="solo-book-highlight">Published:</h6>
-              <p class="solo-book-text">${book.publish_date || "N/A"}</p>
+              <h6 class="solo-book-highlight">Хэвлэгдсэн:</h6>
+              <p class="solo-book-text">${book.publish_date || "Байхгүй"}</p>
             </div>
             <div class="solo-book-additional">
-              <h6 class="solo-book-highlight">Language:</h6>
-              <p class="solo-book-text">${book.language || "N/A"}</p>
+              <h6 class="solo-book-highlight">Хэл:</h6>
+              <p class="solo-book-text">${book.language || "Байхгүй"}</p>
             </div>
             <div class="solo-book-additional">
-              <h6 class="solo-book-highlight">Publisher:</h6>
-              <p class="solo-book-text">${book.publisher || "N/A"}</p>
+              <h6 class="solo-book-highlight">Хэвлэгч:</h6>
+              <p class="solo-book-text">${book.publisher || "Байхгүй"}</p>
             </div>
             <div class="solo-book-additional">
-              <h6 class="solo-book-highlight">Pages:</h6>
-              <p class="solo-book-text">${book.pages || "N/A"}</p>
+              <h6 class="solo-book-highlight">Хуудас:</h6>
+              <p class="solo-book-text">${book.pages || "Байхгүй"}</p>
             </div>
             <div class="solo-book-additional">
-              <h6 class="solo-book-highlight">Format:</h6>
-              <p class="solo-book-text">${book.format || "N/A"}</p>
+              <h6 class="solo-book-highlight">Формат:</h6>
+              <p class="solo-book-text">${book.format || "Байхгүй"}</p>
             </div>
             <button class="solo-add-cart">
               <i class="fa-solid fa-cart-shopping"></i> САГСЛАХ
@@ -68,16 +83,18 @@ class BookDetail extends HTMLElement {
       </main>
     `;
 
+    // Сагсанд нэмэх товчны үйлдлийг холбох
     const addToCartButton = this.querySelector('.solo-add-cart');
     if (addToCartButton) {
       addToCartButton.addEventListener('click', () => {
         const cartItems = CartService.getItems();
-        // This will now add an item if it doesn't exist already.
+        // Хэрэв ном сагсанд байхгүй бол нэмнэ
         CartService.updateQuantity(cartItems, bookId, 1);
-        renderCart(); // Refresh cart UI
+        renderCart(); // Сагсны UI-г шинэчлэх
       });
     }
   }
 }
 
-customElements.define("book-detail", BookDetail); 
+// <book-detail> элементийг бүртгэх
+customElements.define("book-detail", BookDetail);

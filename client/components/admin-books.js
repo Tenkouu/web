@@ -1,100 +1,92 @@
-/*******************************************************
- * admin-books.js
- * 
- * - 5-books-per-page local pagination
- * - Add/Edit/Delete logic using BookService
- * - Overlay form with max-height, scrollable if needed
- * - No internal “Ном нэмэх” button
- *******************************************************/
-import { BookService } from "../js/bookservice.js"; // Adjust the path as needed
+import { BookService } from "../js/bookservice.js"; // 
 
 class AdminBooks extends HTMLElement {
   constructor() {
     super();
-    // We want 5 books per page
+    // Нэг хуудсанд харуулах номын тоо
     this.localBooksPerPage = 5;
 
-    // Add/Edit form state
-    this.showForm = false;
-    this.editingBook = null;
-    this.errorMessage = null;
+    // Add/Edit формын төлөв
+    this.showForm = false; // Форм харагдаж байгаа эсэх
+    this.editingBook = null; // Засах номын мэдээлэл
+    this.errorMessage = null; // Алдааны мэдэгдэл
   }
 
-  // Called when <admin-books> is placed in the DOM
+  // <admin-books> DOM-д нэмэгдэхэд автоматаар дуудагдах
   connectedCallback() {
-    // Use a short delay so we can do async init
+    // Асинхрон эхлүүлэхэд бага хугацаа авахын тулд
     setTimeout(() => this.initializeAdminBooks(), 0);
   }
 
   /**
-   * Initialize data & pagination
+   * Админы хуудсыг анхдагч байдлаар тохируулах
    */
   async initializeAdminBooks() {
-    // 1) Get page=? from URL or default to 1
+    // 1) URL-аас page=? параметр унших эсвэл анхдагч утга 1-г тохируулах
     const params = new URLSearchParams(window.location.search);
     window.currentPage = parseInt(params.get("page"), 10) || 1;
 
-    // 2) Let pagination call renderBooks when user clicks
+    // 2) Pagination солигдох үед renderBooks-г дуудах
     window.onPaginationChange = () => this.renderBooks();
 
-    // 3) Load books if needed
+    // 3) Шаардлагатай бол номын мэдээллийг ачаалах
     await this.fetchBooksIfNeeded();
 
-    // 4) Render the first page
+    // 4) Эхний хуудсыг харуулах
     this.renderBooks();
   }
 
   /**
-   * If window.books is empty, we fetch from server via BookService.
+   * window.books хоосон байвал серверээс номын мэдээллийг авах
    */
   async fetchBooksIfNeeded() {
     try {
       if (!window.books || !Array.isArray(window.books) || window.books.length === 0) {
         const result = await BookService.getBooks(); 
-        // Handle { books: [...] } or direct []
+        // Шууд массив эсвэл { books: [...] } хэлбэртэй өгөгдөлд хариу өгөх
         if (Array.isArray(result)) {
           window.books = result;
         } else if (Array.isArray(result.books)) {
           window.books = result.books;
         } else {
-          console.error("BookService.getBooks() returned unexpected data:", result);
+          console.error("BookService.getBooks() өгөгдөлд алдаа:", result);
           window.books = [];
         }
       }
-      this.updateTotalPages();
+      this.updateTotalPages(); // Хуудасны тоог шинэчлэх
     } catch (err) {
-      console.error("Error fetching books in admin:", err);
-      this.errorMessage = err.message || "Failed to load books.";
+      console.error("Админы хуудсанд номын мэдээллийг ачаалахад алдаа:", err);
+      this.errorMessage = err.message || "Номын мэдээллийг ачаалахад алдаа гарлаа.";
     }
   }
 
   /**
-   * Calculate window.totalPages for pagination
+   * window.totalPages-г дахин тооцоолох
    */
   updateTotalPages() {
-    const total = (window.books || []).length;
-    window.totalPages = Math.ceil(total / this.localBooksPerPage);
+    const total = (window.books || []).length; // Нийт номын тоог олох
+    window.totalPages = Math.ceil(total / this.localBooksPerPage); // Нийт хуудсыг тооцоолох
   }
 
   /**
-   * Render the current page of books + the form overlay (if open)
+   * Одоогийн хуудсыг номын жагсаалт болон формын хамт зурах
    */
   renderBooks() {
     if (!window.books || !Array.isArray(window.books)) {
-      this.innerHTML = `<p>Loading books or none found...</p>`;
+      this.innerHTML = `<p>Номын мэдээлэл ачаалж байна эсвэл хоосон байна...</p>`;
       return;
     }
 
-    // Recalc total pages
+    // Нийт хуудсыг дахин тооцоолох
     this.updateTotalPages();
 
-    // Slice for current page
+    // Одоогийн хуудсанд харуулах номыг сонгох
     const page = window.currentPage || 1;
     const startIndex = (page - 1) * this.localBooksPerPage;
     const endIndex = startIndex + this.localBooksPerPage;
     const booksOnPage = window.books.slice(startIndex, endIndex);
 
-    // Build book list HTML
+    // Номын жагсаалтыг HTML-д хөрвүүлэх
     const booksHTML = booksOnPage
       .map((book) => `
         <div class="admin-book-item">
@@ -120,7 +112,7 @@ class AdminBooks extends HTMLElement {
       `)
       .join("");
 
-    // If form is shown, create an overlay
+    // Форм нээгдсэн бол overlay үүсгэх
     let formOverlayHTML = "";
     if (this.showForm) {
       formOverlayHTML = `
@@ -130,6 +122,7 @@ class AdminBooks extends HTMLElement {
       `;
     }
 
+    // HTML-г DOM-д нэмэх
     this.innerHTML = `
       ${this.errorMessage ? `<p class="admin-error">${this.errorMessage}</p>` : ""}
       <section class="admin-book-list">
@@ -138,17 +131,17 @@ class AdminBooks extends HTMLElement {
       ${formOverlayHTML}
     `;
 
-    // Render pagination
+    // Pagination-г дахин зурах
     if (typeof window.renderPagination === "function") {
       window.renderPagination();
     }
 
-    // Add the overlay + form styling
+    // Overlay-д зориулсан CSS оруулах
     this.injectStyles();
   }
 
   /**
-   * Insert CSS for overlay with max-height 600px, scrollable
+   * Overlay-д зориулсан CSS оруулах
    */
   injectStyles() {
     const styleId = "admin-books-overlay-style";
@@ -159,7 +152,7 @@ class AdminBooks extends HTMLElement {
         .admin-overlay {
           position: fixed;
           top: 0; left: 0;
-          width: 100vw; height: 100vh;
+          width: 125vw; height: 125vh;
           background: rgba(0,0,0,0.5);
           display: flex;
           justify-content: center;
@@ -238,7 +231,7 @@ class AdminBooks extends HTMLElement {
   }
 
   /**
-   * Toggle the form (for adding a book). If already open, close it.
+   * Формыг харуулах/хаах
    */
   toggleForm() {
     this.showForm = !this.showForm;
@@ -250,7 +243,7 @@ class AdminBooks extends HTMLElement {
   }
 
   /**
-   * Start editing a specific book
+   * Тодорхой номыг засах
    */
   async editBook(bookId) {
     try {
@@ -260,20 +253,19 @@ class AdminBooks extends HTMLElement {
       this.errorMessage = null;
       this.renderBooks();
     } catch (error) {
-      this.errorMessage = "Error loading book: " + error.message;
+      this.errorMessage = "Номын мэдээллийг ачаалахад алдаа: " + error.message;
       this.renderBooks();
     }
   }
 
   /**
-   * Delete a book after confirmation
+   * Номыг устгах
    */
   async handleDeleteBook(bookId) {
     if (!confirm("Та энэ номыг устгах уу?")) return;
     try {
       await BookService.deleteBook(bookId);
-      // reload
-      await this.fetchBooksIfNeeded();
+      await this.fetchBooksIfNeeded(); // Номын жагсаалтыг дахин ачаалах
       this.renderBooks();
     } catch (error) {
       this.errorMessage = error.message;
@@ -282,7 +274,7 @@ class AdminBooks extends HTMLElement {
   }
 
   /**
-   * Return form overlay HTML (edit or add)
+   * Формын HTML буцаах (шинэ ном нэмэх/засах)
    */
   getFormTemplate(book) {
     const isEditing = !!book;
@@ -360,13 +352,13 @@ class AdminBooks extends HTMLElement {
   }
 
   /**
-   * Handle add/update form submission
+   * Формыг илгээхэд хариу өгөх (шинэчлэх/нэмэх)
    */
   async handleFormSubmit(event) {
     event.preventDefault();
-    const formData = new FormData(event.target);
-    const bookData = {
-        id: parseInt(formData.get("id")),
+    const formData = new FormData(event.target); // Формын өгөгдлийг авах
+    const bookData = { 
+      id: parseInt(formData.get("id")),
       title: formData.get("title"),
       author: formData.get("author"),
       price: parseFloat(formData.get("price")) || 0,
@@ -382,30 +374,28 @@ class AdminBooks extends HTMLElement {
       rating: parseFloat(formData.get("rating")) || 0,
       reviews: parseInt(formData.get("reviews")) || 0,
       in_stock: formData.get("in_stock") === "true",
-    };
+     };
 
     try {
       if (this.editingBook) {
-        // Update
-        await BookService.updateBook(this.editingBook.id, bookData);
+        await BookService.updateBook(this.editingBook.id, bookData); // Ном шинэчлэх
       } else {
-        // Add
-        await BookService.addBook(bookData);
+        await BookService.addBook(bookData); // Шинэ ном нэмэх
       }
 
       this.showForm = false;
       this.editingBook = null;
       this.errorMessage = null;
 
-      // Reload
-      await this.fetchBooksIfNeeded();
+      await this.fetchBooksIfNeeded(); // Номын жагсаалтыг дахин ачаалах
       this.renderBooks();
     } catch (error) {
-      console.error("Form submission error:", error);
-      this.errorMessage = error.message || "Failed to submit form.";
+      console.error("Формыг илгээхэд алдаа:", error);
+      this.errorMessage = error.message || "Алдаа гарлаа.";
       this.renderBooks();
     }
   }
 }
 
+// Custom element бүртгэх
 customElements.define("admin-books", AdminBooks);

@@ -1,38 +1,58 @@
-// ad.js: For admin.html only!
+/**
+ * Энэ скрипт админы хуудсыг зохицуул.
+ * 
+ * Үндсэн үүрэг:
+ * - URL-ээс хуудасны дугаарыг уншина.
+ * - API-тай холбогдож номын өгөгдлийг татаж авна.
+ * - Номын өгөгдлийг глобал хувьсагчид хадгална.
+ * - API-тай холбоотой алдаа гарвал харуулах.
+ */
 
-window.books = []; // We'll store the books here
+// Номын өгөгдлийг хадгалах глобал хувьсагч
+window.books = []; 
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Admin bootstrap starting...");
+    console.log("Админы bootstrap эхэлж байна...");
 
-  // 1) read page param, default 1
-  const params = new URLSearchParams(window.location.search);
-  window.currentPage = parseInt(params.get("page"), 10) || 1;
+    /**
+     * 1. URL параметрээс хуудасны дугаарыг унших.
+     * Хэрэв дугаар байхгүй бол 1-ийг ашиглана.
+     */
+    const params = new URLSearchParams(window.location.search);
+    window.currentPage = parseInt(params.get("page"), 10) || 1;
 
-  // 2) fetch from /api/books
-  fetch("/api/books")
-    .then((resp) => {
-      if (!resp.ok) {
-        throw new Error(`Failed to fetch books: ${resp.status}`);
-      }
-      return resp.json();
-    })
-    .then((data) => {
-      // If array:
-      if (Array.isArray(data)) {
-        window.books = data;
-      } else if (Array.isArray(data.books)) {
-        window.books = data.books;
-      } else {
-        console.error("Unexpected data from server", data);
-        window.books = [];
-      }
+    /**
+     * 2. API-аас номын өгөгдөл татах.
+     */
+    fetch("/api/books")
+        .then((resp) => {
+            // Хариу OK биш бол алдаа шидэх.
+            if (!resp.ok) {
+                throw new Error(`Номын өгөгдлийг татаж чадсангүй: ${resp.status}`);
+            }
+            return resp.json(); // JSON формат руу хөрвүүлэх.
+        })
+        .then((data) => {
+            /**
+             * Серверээс ирсэн өгөгдлийг шалгах:
+             * - Хэрэв массив бол шууд ашиглах.
+             * - Хэрэв `books` талбарт массив байгаа бол түүнийг ашиглах.
+             * - Аль нь ч байхгүй бол хоосон массивыг хадгалах.
+             */
+            if (Array.isArray(data)) {
+                window.books = data;
+            } else if (Array.isArray(data.books)) {
+                window.books = data.books;
+            } else {
+                console.error("Серверээс ирсэн өгөгдөл танигдахгүй байна", data);
+                window.books = [];
+            }
 
-      // Our admin-books.js will do the slicing in connectedCallback or renderBooks
-      // so we don't do anything else here, except maybe log:
-      console.log("Admin page has loaded books:", window.books.length);
-    })
-    .catch((err) => {
-      console.error("Error in admin fetch:", err);
-    });
+            // Хадгалсан номын тоог консолд бичих.
+            console.log("Админы хуудас ном ачааллаа:", window.books.length);
+        })
+        .catch((err) => {
+            // Хэрэв fetch амжилтгүй бол алдааг харуулах.
+            console.error("API-тай холбоотой алдаа:", err);
+        });
 });

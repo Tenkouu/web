@@ -1,58 +1,56 @@
-// filter-list.js
-
 /**
- * Normalizes a string by:
- *   - making it lowercase
- *   - replacing whitespace with "-"
+ * String-ийг стандартчилах функц:
+ *   - Том үсгийг жижиг болгон хувиргана
+ *   - Хоосон зайг "-" болгон солино
  */
 function normalizeString(str) {
   return str.toLowerCase().replace(/\s+/g, "-");
 }
 
 /**
- * Applies local filters to window.books:
- *   1) Reads URL params: ?search=... & checkboxes (price1, rating-5, etc.)
- *   2) Filters the array based on those params
- *   3) Performs local pagination (based on window.currentPage and window.booksPerPage)
- *   4) Renders that sub-array with `renderBooks(...)`
- *   5) Sets window.totalPages, calls renderPagination()
+ * URL дээрх параметрүүдэд үндэслэн шүүлтүүрийг хэрэгжүүлэх.
+ *   1) ?search=... болон checkbox-ууд (price1, rating-5 гэх мэт)-ийг унших
+ *   2) Тэдгээр параметрүүдийг ашиглан массивыг шүүх
+ *   3) Локал pagination-ийг (window.currentPage болон window.booksPerPage дээр үндэслэн) хийх
+ *   4) `renderBooks(...)` функцээр шүүсэн массивыг зурах
+ *   5) window.totalPages-г тохируулж, renderPagination() функцийг дуудах
  */
 function applyFiltersFromQuery() {
-  const params = new URLSearchParams(window.location.search);
-  const searchInput = params.get("search") || "";
+  const params = new URLSearchParams(window.location.search); // URL-ийн query string унших
+  const searchInput = params.get("search") || ""; // Хайлтын үг авах
 
-  // Collect everything except "search" and "page" as a "selectedFilters" array
+  // "search" болон "page"-ээс бусад бүх query-г сонгосон шүүлтүүрт нэмэх
   const selectedFilters = Array.from(params.keys()).filter(
     (key) => key !== "search" && key !== "page"
   );
 
-  // Read page from URL or default to 1
+  // Page параметрийг унших, эсвэл анхдагч утга 1 болгох
   const page = parseInt(params.get("page"), 10) || 1;
   window.currentPage = page;
 
-  // Filter window.books
+  // Номын жагсаалтыг шүүх
   const filteredBooks = (window.books || []).filter((book) => {
-    // Title search
+    // Хайлт хийх
     const matchesSearch = book.title
       .toLowerCase()
       .includes(searchInput.toLowerCase());
 
-    // Check if all selected filters match
+    // Сонгосон шүүлтүүр бүртэй таарч байгаа эсэхийг шалгах
     const matchesFilters = selectedFilters.every((filter) => {
-      // Price filter
+      // Үнэ шүүлтүүр
       if (filter === "price1") return book.price >= 0 && book.price <= 10000;
       if (filter === "price2") return book.price > 10000 && book.price <= 20000;
       if (filter === "price3") return book.price > 20000 && book.price <= 30000;
       if (filter === "price4") return book.price > 30000;
 
-      // Rating filter (e.g. rating-5 => book.review >= 5)
+      // Үнэлгээний шүүлтүүр (жишээ нь rating-5 => book.review >= 5)
       if (filter.startsWith("rating-")) {
-        const ratingThreshold = parseInt(filter.split("-")[1], 10);
+        const ratingThreshold = parseInt(filter.split("-")[1], 10); // Үнэлгээний босго
         const numericValue = parseFloat(book.review ?? book.rating ?? "0") || 0;
         return numericValue >= ratingThreshold;
       }
 
-      // Category filter: compare normalized category with filter
+      // Ангиллын шүүлтүүр
       const normalizedCategory = normalizeString(book.category || "");
       return normalizedCategory === filter;
     });
@@ -60,43 +58,42 @@ function applyFiltersFromQuery() {
     return matchesSearch && matchesFilters;
   });
 
-  // Now we do local pagination
+  // Локал pagination хийх
   const startIndex = (page - 1) * window.booksPerPage;
   const endIndex = startIndex + window.booksPerPage;
   const pageOfBooks = filteredBooks.slice(startIndex, endIndex);
 
-  // Render this "page" of filtered books
+  // Шүүсэн номыг зурах
   if (typeof renderBooks === "function") {
     renderBooks(pageOfBooks);
   }
 
-  // Update total pages for pagination
+  // Нийт хуудсын тоог шинэчлэх
   window.totalPages = Math.ceil(filteredBooks.length / window.booksPerPage);
 
-  // Re-draw pagination if available
+  // Pagination-ийг дахин зурах
   if (typeof renderPagination === "function") {
     renderPagination();
   }
 }
 
 /**
- * Clear all filters from the URL, reset checkboxes in the UI,
- * reset page to 1, then re-run applyFiltersFromQuery().
+ * Бүх шүүлтүүрийг цэвэрлэж, анхны төлөвт оруулах.
  */
 function clearFilters() {
   const params = new URLSearchParams(window.location.search);
 
-  // Remove everything from the query
+  // Query string-ээс бүх зүйлийг устгах
   params.delete("search");
   Array.from(params.keys()).forEach((key) => params.delete(key));
 
-  // Reset all checkboxes
+  // Checkbox-уудыг анхны төлөвт оруулах
   const filters = document.querySelectorAll("aside input[type='checkbox']");
   filters.forEach((checkbox) => {
     checkbox.checked = false;
   });
 
-  // Reset page to 1
+  // Page параметрийг 1 болгох
   params.set("page", "1");
   window.history.replaceState({}, "", `?${params.toString()}`);
 
@@ -104,54 +101,50 @@ function clearFilters() {
 }
 
 /**
- * Attaches event listeners to checkboxes and search input,
- * so that changing them updates the URL and calls applyFiltersFromQuery().
+ * Checkbox болон хайлтын талбарт сонсогч нэмэх.
+ * Шүүлтүүр өөрчлөгдөхөд URL-ийг шинэчилж applyFiltersFromQuery() дуудах.
  */
 function attachListeners() {
-  const filters = document.querySelectorAll("aside input[type='checkbox']");
-  const searchInput = document.querySelector(".group input");
+  const filters = document.querySelectorAll("aside input[type='checkbox']"); // Checkbox-ууд
+  const searchInput = document.querySelector(".group input"); // Хайлтын талбар
 
-  // For each checkbox
+  // Checkbox бүрт сонсогч нэмэх
   filters.forEach((checkbox) => {
     checkbox.addEventListener("change", () => {
       const params = new URLSearchParams(window.location.search);
       if (checkbox.checked) {
-        params.set(checkbox.id, "true");
+        params.set(checkbox.id, "true"); // Checkbox идэвхжсэн бол нэмэх
       } else {
-        params.delete(checkbox.id);
+        params.delete(checkbox.id); // Checkbox идэвхгүй бол устгах
       }
-      // Reset page to 1
-      params.set("page", "1");
+      params.set("page", "1"); // Page-г 1 болгох
       window.history.replaceState({}, "", `?${params.toString()}`);
       applyFiltersFromQuery();
     });
   });
 
-  // For the search input (if it exists)
+  // Хайлтын талбарт сонсогч нэмэх
   if (searchInput) {
     searchInput.addEventListener("input", () => {
       const params = new URLSearchParams(window.location.search);
       if (searchInput.value) {
-        params.set("search", searchInput.value);
+        params.set("search", searchInput.value); // Хайлтын утга нэмэх
       } else {
-        params.delete("search");
+        params.delete("search"); // Хоосон бол устгах
       }
-      params.set("page", "1");
+      params.set("page", "1"); // Page-г 1 болгох
       window.history.replaceState({}, "", `?${params.toString()}`);
       applyFiltersFromQuery();
     });
   }
 }
 
-// Expose to global (so they can be called elsewhere)
+// Глобал функц болгон зарлах
 window.applyFiltersFromQuery = applyFiltersFromQuery;
 window.clearFilters = clearFilters;
 window.attachListeners = attachListeners;
 window.normalizeString = normalizeString;
 
-/**
- * The custom element <filter-list> that provides the checkboxes, etc.
- */
 class FilterList extends HTMLElement {
   connectedCallback() {
     this.innerHTML = `
@@ -269,4 +262,5 @@ class FilterList extends HTMLElement {
   }
 }
 
+// Custom element бүртгэх
 customElements.define("filter-list", FilterList);
