@@ -12,7 +12,19 @@
 
   <main class="info-main">
     <aside class="info-aside">
-      <filter-list></filter-list>
+      <filter-list>
+        <span slot="fiction-label">Fiction</span>
+        <span slot="non-fiction-label">Non-Fiction</span>
+        <span slot="romance-label">Romance</span>
+        <span slot="mystery-label">Mystery</span>
+        <span slot="historical-label">Historical</span>
+        <span slot="classic-label">Classic</span>
+        <span slot="biography-label">Biography</span>
+        <span slot="language-label">Language</span>
+        <span slot="fantasy-label">Fantasy</span>
+        <span slot="horror-label">Horror</span>
+        <span slot="anthology-label">Anthology</span>
+      </filter-list>      
     </aside>
     <div class="col-span-8">
       <book-list></book-list>
@@ -31,7 +43,6 @@
   <script type="module" src="client/components/pagination-control.js"></script>
   <script type="module" src="client/components/store-footer.js"></script>
   <script type="module" src="client/components/shopping-cart.js"></script>
-  <script type="module" src="client/js/theme-toggle.js"></script> 
 
 </body>
 </html>

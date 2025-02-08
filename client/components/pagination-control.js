@@ -1,30 +1,50 @@
-/****
- * pagination-control.js
- *
- * - Pagination UI-ийг харуулна
- * - Нийт хуудсын тоо болон одоогийн хуудасны мэдээлэлд тулгуурлана
- * - Хуудасны өөрчлөлт хийхэд URL болон дэлгэц шинэчлэгдэнэ
- ****/
+/**
+ * Updates the URL’s “page” parameter.
+ * @param {number} pageNumber - The new page number.
+ */
+function setPageParamInURL(pageNumber) {
+  const params = new URLSearchParams(window.location.search);
+  params.set("page", pageNumber);
+  window.history.replaceState({}, "", `?${params.toString()}`);
+}
 
 /**
- * Pagination UI-г #pagination контейнерт оруулна.
- * Хүлээж авах параметрүүд:
- *   - window.currentPage  (тоон утга: одоогийн хуудас)
- *   - window.totalPages   (тоон утга: нийт хуудсууд)
+ * Called when a pagination button is clicked.
+ * - Updates window.currentPage.
+ * - Updates the URL.
+ * - Calls the onPaginationChange handler.
+ * @param {number} pageNumber - The new page number.
+ */
+function changePage(pageNumber) {
+  window.currentPage = pageNumber;
+  setPageParamInURL(pageNumber);
+  if (typeof window.onPaginationChange === "function") {
+    window.onPaginationChange();
+  }
+}
+
+/**
+ * Renders the pagination controls inside the <pagination-control> custom element.
  */
 function renderPagination() {
-  const paginationContainer = document.getElementById("pagination");
+  // Get the custom element
+  const paginationControl = document.querySelector("pagination-control");
+  if (!paginationControl) {
+    console.error("Алдаа: 'pagination-control' элемент олдсонгүй.");
+    return;
+  }
+  // Query the shadow root for the container with id "pagination"
+  const paginationContainer = paginationControl.shadowRoot.getElementById("pagination");
   if (!paginationContainer) {
     console.error("Алдаа: 'pagination' контейнер олдсонгүй.");
     return;
   }
 
-  const totalPages = window.totalPages || 1; // Нийт хуудсууд, анхдагч 1
-  const currentPage = window.currentPage || 1; // Одоогийн хуудас, анхдагч 1
-
+  const totalPages = window.totalPages || 1;
+  const currentPage = window.currentPage || 1;
   let paginationHTML = "";
 
-  // Зүүн сум
+  // Left arrow button
   paginationHTML += `
     <button 
       class="pagination-arrow"
@@ -36,7 +56,7 @@ function renderPagination() {
   `;
 
   if (totalPages <= 3) {
-    // Хэрэв нийт хуудас бага байвал бүгдийг харуулах
+    // If there are few pages, display them all.
     for (let i = 1; i <= totalPages; i++) {
       paginationHTML += `
         <button
@@ -46,7 +66,7 @@ function renderPagination() {
       `;
     }
   } else {
-    // Эхний хуудас
+    // First page
     paginationHTML += `
       <button
         class="pagination-number ${currentPage === 1 ? "active" : ""}"
@@ -55,7 +75,7 @@ function renderPagination() {
     `;
 
     if (currentPage <= 3) {
-      // Ойролцоох хуудаснуудыг харуулах
+      // Near the beginning
       for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
         paginationHTML += `
           <button
@@ -68,7 +88,7 @@ function renderPagination() {
         paginationHTML += `<button class="pagination-ellipsis" disabled>...</button>`;
       }
     } else if (currentPage >= totalPages - 2) {
-      // Төгсгөлд ойрхон бол
+      // Near the end
       paginationHTML += `<button class="pagination-ellipsis" disabled>...</button>`;
       for (let i = totalPages - 2; i < totalPages; i++) {
         paginationHTML += `
@@ -79,20 +99,17 @@ function renderPagination() {
         `;
       }
     } else {
-      // Дунд хэсэгт байгаа тохиолдолд
+      // In the middle
+      paginationHTML += `<button class="pagination-ellipsis" disabled>...</button>`;
       paginationHTML += `
-        <button class="pagination-ellipsis" disabled>...</button>
-        <button
-          class="pagination-number active"
-          onclick="changePage(${currentPage})"
-        >
+        <button class="pagination-number active" onclick="changePage(${currentPage})">
           ${currentPage}
         </button>
-        <button class="pagination-ellipsis" disabled>...</button>
       `;
+      paginationHTML += `<button class="pagination-ellipsis" disabled>...</button>`;
     }
 
-    // Сүүлийн хуудас
+    // Last page
     paginationHTML += `
       <button
         class="pagination-number ${currentPage === totalPages ? "active" : ""}"
@@ -101,59 +118,99 @@ function renderPagination() {
     `;
   }
 
-  // Баруун сум
+  // Right arrow button
   paginationHTML += `
     <button 
       class="pagination-arrow"
-      onclick="${
-        currentPage < totalPages ? `changePage(${currentPage + 1})` : ""
-      }"
+      onclick="${currentPage < totalPages ? `changePage(${currentPage + 1})` : ""}"
       ${currentPage === totalPages ? "disabled" : ""}
     >
       <i class="fa-solid fa-arrow-right"></i>
     </button>
   `;
 
-  paginationContainer.innerHTML = paginationHTML; // HTML-ийг контейнерт оруулах
+  // Set the container's innerHTML
+  paginationContainer.innerHTML = paginationHTML;
 }
 
-/**
- * URL дэх page параметрийг шинэчлэх
- * @param {number} pageNumber Хуудасны дугаар
- */
-function setPageParamInURL(pageNumber) {
-  const params = new URLSearchParams(window.location.search);
-  params.set("page", pageNumber); // Page параметрийг тохируулах
-  window.history.replaceState({}, "", `?${params.toString()}`); // URL-г шинэчлэх
-}
-
-/**
- * Pagination товчлуур дээр дарагдсан үед дуудагдана.
- * - window.currentPage-г шинэчлэх
- * - URL-г шинэчлэх
- * - window.onPaginationChange() функцыг дуудах
- * @param {number} pageNumber Хуудасны дугаар
- */
-function changePage(pageNumber) {
-  window.currentPage = pageNumber;
-  setPageParamInURL(pageNumber);
-
-  if (typeof window.onPaginationChange === "function") {
-    window.onPaginationChange(); // Хуудасны өөрчлөлтөд тохирох функц
-  }
-}
-
-// Глобал функц болгон бүртгэх
+// Expose the functions globally.
 window.renderPagination = renderPagination;
 window.changePage = changePage;
 
 /**
- * <pagination-control> custom элемент
- * Pagination-г харуулах <div> үүсгэнэ.
+ * <pagination-control> custom element using Shadow DOM.
+ * It renders a container for the pagination controls.
  */
 class PaginationControl extends HTMLElement {
+  constructor() {
+    super();
+    // Attach shadow DOM immediately
+    this.attachShadow({ mode: 'open' });
+  }
+
   connectedCallback() {
-    this.innerHTML = `
+    this.shadowRoot.innerHTML = `
+      <style>
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
+        
+        * {
+          font-family: "Finlandica", system-ui, sans-serif;
+        }
+        .pagination-aligner {
+          display: flex;
+          justify-content: center;
+          margin-top: 30px;
+        }
+        .pagination-container {
+          display: flex;
+          column-gap: 10px;
+        }
+        .pagination-arrow {
+          background-color: var(--text-color);
+          color: var(--bg-color);
+          width: 55px;
+          height: 55px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: none;
+          cursor: pointer;
+          font-size: 30px;
+        }
+        .pagination-arrow:disabled {
+          cursor: not-allowed;
+          opacity: 0.6;
+        }
+        .pagination-number {
+          background-color: var(--text-color);
+          color: var(--bg-color);
+          width: 55px;
+          height: 55px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: none;
+          cursor: pointer;
+          font-size: 24px;
+        }
+        .pagination-number.active {
+          font-weight: bold;
+        }
+        .pagination-ellipsis {
+          background-color: var(--text-color);
+          color: var(--bg-color);
+          width: 55px;
+          height: 55px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: none;
+          cursor: default;
+        }
+      </style>
       <div class="pagination-aligner">
         <div class="pagination-container" id="pagination"></div>
       </div>
@@ -161,5 +218,4 @@ class PaginationControl extends HTMLElement {
   }
 }
 
-// <pagination-control> элементийг бүртгэх
 customElements.define("pagination-control", PaginationControl);

@@ -1,9 +1,3 @@
-/**
- * Theme Toggle
- * - Dark ба Light theme-г хооронд нь сольж болдог функц.
- * - Сонгосон theme-г localStorage-д хадгалдаг тул дахин ачаалсны дараа хадгалагдсан theme-ээр тохируулна.
- * - .theme-toggle товчин дээр дарж theme-г солих боломжтой.
- */
 
  // DOM ачаалсны дараа theme-ийг тохируулах
  document.addEventListener('DOMContentLoaded', () => {

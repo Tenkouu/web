@@ -3,24 +3,18 @@ import { BookService } from "../js/bookservice.js"; //
 class AdminBooks extends HTMLElement {
   constructor() {
     super();
-    // Нэг хуудсанд харуулах номын тоо
     this.localBooksPerPage = 5;
 
     // Add/Edit формын төлөв
-    this.showForm = false; // Форм харагдаж байгаа эсэх
-    this.editingBook = null; // Засах номын мэдээлэл
-    this.errorMessage = null; // Алдааны мэдэгдэл
+    this.showForm = false; 
+    this.editingBook = null;
+    this.errorMessage = null; 
   }
 
-  // <admin-books> DOM-д нэмэгдэхэд автоматаар дуудагдах
   connectedCallback() {
-    // Асинхрон эхлүүлэхэд бага хугацаа авахын тулд
     setTimeout(() => this.initializeAdminBooks(), 0);
   }
 
-  /**
-   * Админы хуудсыг анхдагч байдлаар тохируулах
-   */
   async initializeAdminBooks() {
     // 1) URL-аас page=? параметр унших эсвэл анхдагч утга 1-г тохируулах
     const params = new URLSearchParams(window.location.search);
@@ -36,9 +30,7 @@ class AdminBooks extends HTMLElement {
     this.renderBooks();
   }
 
-  /**
-   * window.books хоосон байвал серверээс номын мэдээллийг авах
-   */
+
   async fetchBooksIfNeeded() {
     try {
       if (!window.books || !Array.isArray(window.books) || window.books.length === 0) {
@@ -60,17 +52,13 @@ class AdminBooks extends HTMLElement {
     }
   }
 
-  /**
-   * window.totalPages-г дахин тооцоолох
-   */
+
   updateTotalPages() {
     const total = (window.books || []).length; // Нийт номын тоог олох
     window.totalPages = Math.ceil(total / this.localBooksPerPage); // Нийт хуудсыг тооцоолох
   }
 
-  /**
-   * Одоогийн хуудсыг номын жагсаалт болон формын хамт зурах
-   */
+
   renderBooks() {
     if (!window.books || !Array.isArray(window.books)) {
       this.innerHTML = `<p>Номын мэдээлэл ачаалж байна эсвэл хоосон байна...</p>`;
@@ -131,18 +119,14 @@ class AdminBooks extends HTMLElement {
       ${formOverlayHTML}
     `;
 
-    // Pagination-г дахин зурах
     if (typeof window.renderPagination === "function") {
       window.renderPagination();
     }
 
-    // Overlay-д зориулсан CSS оруулах
     this.injectStyles();
   }
 
-  /**
-   * Overlay-д зориулсан CSS оруулах
-   */
+
   injectStyles() {
     const styleId = "admin-books-overlay-style";
     if (!document.getElementById(styleId)) {
@@ -230,9 +214,7 @@ class AdminBooks extends HTMLElement {
     }
   }
 
-  /**
-   * Формыг харуулах/хаах
-   */
+
   toggleForm() {
     this.showForm = !this.showForm;
     if (!this.showForm) {
@@ -242,9 +224,7 @@ class AdminBooks extends HTMLElement {
     this.renderBooks();
   }
 
-  /**
-   * Тодорхой номыг засах
-   */
+
   async editBook(bookId) {
     try {
       const book = await BookService.getBookById(bookId);
@@ -258,9 +238,6 @@ class AdminBooks extends HTMLElement {
     }
   }
 
-  /**
-   * Номыг устгах
-   */
   async handleDeleteBook(bookId) {
     if (!confirm("Та энэ номыг устгах уу?")) return;
     try {
@@ -273,9 +250,7 @@ class AdminBooks extends HTMLElement {
     }
   }
 
-  /**
-   * Формын HTML буцаах (шинэ ном нэмэх/засах)
-   */
+ 
   getFormTemplate(book) {
     const isEditing = !!book;
     return `
@@ -351,9 +326,7 @@ class AdminBooks extends HTMLElement {
     `;
   }
 
-  /**
-   * Формыг илгээхэд хариу өгөх (шинэчлэх/нэмэх)
-   */
+
   async handleFormSubmit(event) {
     event.preventDefault();
     const formData = new FormData(event.target); // Формын өгөгдлийг авах
