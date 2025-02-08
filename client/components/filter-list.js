@@ -1,62 +1,82 @@
-// Global functions – DO NOT change these
+/**
+ * Доорх глобал функцууд (normalizeString, applyFiltersFromQuery, clearFilters, attachListeners) 
+ * нь url query string-д тулгуурлан фильтр, хайлтын утгыг уншиж, 
+ * window.books-ыг шүүж, тухайн хэсгийг renderBooks(...) дуудаж байна.
+ * 
+ * filterTemplate нь шүүлтүүрийн UI-г shadowRoot-д оруулахад ашиглагдана.
+ */
+
 function normalizeString(str) {
+  // Энэ функц: том жижиг үсгийг жигдлэх, хоосон зайг "-" болгож солих
+  // Жишээ: "Science Fiction" => "science-fiction"
   return str.toLowerCase().replace(/\s+/g, "-");
 }
 
 function applyFiltersFromQuery() {
-  const params = new URLSearchParams(window.location.search); // Read URL query string
-  const searchInput = params.get("search") || ""; // Get search term
+  // URL query string-ийг (window.location.search) уншиж, түүнээс "page", "search", бусад фильтрүүдийг гаргаж авна
+  const params = new URLSearchParams(window.location.search); 
+  // "search" параметр байгаа бол авч, байхгүй бол ""
+  const searchInput = params.get("search") || ""; 
 
-  // Add all query parameters except "search" and "page" as selected filters
+  // "search", "page" -оос бусад query параметрүүдийг бүгдийг filters массивт байршуулна
   const selectedFilters = Array.from(params.keys()).filter(
     (key) => key !== "search" && key !== "page"
   );
 
-  // Read the page parameter; default to 1
+  // page параметрээс хуудсыг унших, байхгүй бол 1
   const page = parseInt(params.get("page"), 10) || 1;
   window.currentPage = page;
 
-  // Filter the books
+  // Энд window.books дээрх өгөгдлийг шүүж filteredBooks үүсгэж байна
   const filteredBooks = (window.books || []).filter((book) => {
+    // Хайх утгыг book.title.includes(...) ашиглан шалгах
     const matchesSearch = book.title.toLowerCase().includes(searchInput.toLowerCase());
+    // Бусад filters-ийг бүрэн хангаж буй эсэх
     const matchesFilters = selectedFilters.every((filter) => {
       if (filter === "price1") return book.price >= 0 && book.price <= 10000;
       if (filter === "price2") return book.price > 10000 && book.price <= 20000;
       if (filter === "price3") return book.price > 20000 && book.price <= 30000;
       if (filter === "price4") return book.price > 30000;
       if (filter.startsWith("rating-")) {
+        // "rating-3" гэх мэтээс 3 гэсэн тоог салган авч, номын rating-тай харьцуулна
         const ratingThreshold = parseInt(filter.split("-")[1], 10);
         const numericValue = parseFloat(book.review ?? book.rating ?? "0") || 0;
         return numericValue >= ratingThreshold;
       }
+      // Ангилалтай харьцуулахдаа normalizeString(book.category) ашиглана
       const normalizedCategory = normalizeString(book.category || "");
       return normalizedCategory === filter;
     });
+    // хайлтын утга болон бүх фильтр таарч байвал true
     return matchesSearch && matchesFilters;
   });
 
-  // Pagination: slice the filtered books
+  // Хуудаслалт: тохирох номнуудын эхлэл болон төгсгөлийг бодож, pageOfBooks үүсгэнэ
   const startIndex = (page - 1) * window.booksPerPage;
   const endIndex = startIndex + window.booksPerPage;
   const pageOfBooks = filteredBooks.slice(startIndex, endIndex);
 
+  // renderBooks функц байгаа эсэхийг шалгаад pageOfBooks-г илгээж зурна
   if (typeof renderBooks === "function") {
     renderBooks(pageOfBooks);
   }
 
+  // Нийт хуудсыг тооцож, window.totalPages-д хадгална
   window.totalPages = Math.ceil(filteredBooks.length / window.booksPerPage);
 
+  // Хэрэв renderPagination тодорхойлогдсон байвал дуудаж pagination контролыг шинэчлэх
   if (typeof renderPagination === "function") {
     renderPagination();
   }
 }
 
 function clearFilters() {
+  // Бүх шүүлтүүр, "search" query-г устгаж, page-ийг 1 болгож, applyFiltersFromQuery() дахин дуудаж байна
   const params = new URLSearchParams(window.location.search);
   params.delete("search");
   Array.from(params.keys()).forEach((key) => params.delete(key));
 
-  // Reset checkbox states (if the checkboxes are in the light DOM, this code might need updating)
+  // DOM дээрх checkbox-г цэвэрлэх (unchecked болгох)
   const filters = document.querySelectorAll("aside input[type='checkbox']");
   filters.forEach((checkbox) => {
     checkbox.checked = false;
@@ -64,49 +84,55 @@ function clearFilters() {
 
   params.set("page", "1");
   window.history.replaceState({}, "", `?${params.toString()}`);
-
   applyFiltersFromQuery();
 }
 
 function attachListeners() {
+  // Энэ функц: DOM дээрх шүүлтүүр checkbox, search input зэрэгт event listener залгана
   const filters = document.querySelectorAll("aside input[type='checkbox']");
-// Find <store-header> in the light DOM
-const storeHeader = document.querySelector("store-header");
-let searchInput;
+  
+  // <store-header> элементийг хайж, shadowRoot дахь .search-input-г олох гэж оролдож байна
+  const storeHeader = document.querySelector("store-header");
+  let searchInput;
 
-// If <store-header> exists and has a shadowRoot, find the input inside it
-if (storeHeader && storeHeader.shadowRoot) {
-  searchInput = storeHeader.shadowRoot.querySelector(".search-input");
-}
+  if (storeHeader && storeHeader.shadowRoot) {
+    searchInput = storeHeader.shadowRoot.querySelector(".search-input");
+  }
 
-if (searchInput) {
-  searchInput.addEventListener("input", () => {
-    const params = new URLSearchParams(window.location.search);
-    if (searchInput.value) {
-      params.set("search", searchInput.value);
-    } else {
-      params.delete("search");
-    }
-    params.set("page", "1");
-    window.history.replaceState({}, "", `?${params.toString()}`);
-    applyFiltersFromQuery();
-  });
-}
-
-  filters.forEach((checkbox) => {
-    checkbox.addEventListener("change", () => {
+  // Хэрэв searchInput олдвол input эвентэд хариу өгч, query string-д "search" параметр set/delete хийж байна
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
       const params = new URLSearchParams(window.location.search);
-      if (checkbox.checked) {
-        params.set(checkbox.id, "true");
+      if (searchInput.value) {
+        params.set("search", searchInput.value);
       } else {
-        params.delete(checkbox.id);
+        params.delete("search");
       }
       params.set("page", "1");
       window.history.replaceState({}, "", `?${params.toString()}`);
       applyFiltersFromQuery();
     });
+  }
+
+  // Бүх checkbox-д change эвент нэмнэ
+  filters.forEach((checkbox) => {
+    checkbox.addEventListener("change", () => {
+      const params = new URLSearchParams(window.location.search);
+      if (checkbox.checked) {
+        // checkbox.id-г query string-д set
+        params.set(checkbox.id, "true");
+      } else {
+        params.delete(checkbox.id);
+      }
+      params.set("page", "1");
+      // URL-ийг шинэчлэх, дараа нь applyFiltersFromQuery() дуудаж шүүсэн номыг үзүүлэх
+      window.history.replaceState({}, "", `?${params.toString()}`);
+      applyFiltersFromQuery();
+    });
   });
 
+  // Дахин давтаж бичсэн хэсэг: searchInput байгаа эсэхийг шалгаад addEventListener
+  // Энэ нь адилхан үйлдэл хийх тул давхар шалгаж байна
   if (searchInput) {
     searchInput.addEventListener("input", () => {
       const params = new URLSearchParams(window.location.search);
@@ -122,14 +148,14 @@ if (searchInput) {
   }
 }
 
+// Эдгээр функцийг глобал болгож, бусад файлууд ч window.xxx гэж дуудаж чадна
 window.applyFiltersFromQuery = applyFiltersFromQuery;
 window.clearFilters = clearFilters;
 window.attachListeners = attachListeners;
 window.normalizeString = normalizeString;
 
-// --- New Functionality for Cart Clearing ---
+// clearCart(): cartItems-ийг localStorage дээрээс цэвэрлэж, renderCart() дуудах
 function clearCart() {
-  // Clear the cart by setting an empty array in localStorage
   localStorage.setItem('cartItems', JSON.stringify([]));
   if (typeof renderCart === 'function') {
     renderCart();
@@ -137,7 +163,7 @@ function clearCart() {
 }
 window.clearCart = clearCart;
 
-// --- Template with Named Slots for Filter List and Cart Summary ---
+// filterTemplate: Shadow DOM-д ашиглах template
 const filterTemplate = document.createElement('template');
 filterTemplate.innerHTML = `
   <style>
@@ -209,13 +235,11 @@ filterTemplate.innerHTML = `
     .filter-label {
       margin-left: 12px;
     }
-    /* New CSS for cart summary section in aside */
     .cart-aside {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 40px;
-
     }
     .clear-cart-button {
       background-color: var(--text-color);
@@ -236,7 +260,6 @@ filterTemplate.innerHTML = `
       font-size: 24px;
       font-weight: bold;
     }
-
   </style>
   <button id="clear-filters" class="clear-filters" onclick="clearFilters()">Clear Filters</button>
   <div class="cart-aside">
@@ -374,13 +397,14 @@ filterTemplate.innerHTML = `
 
 class FilterList extends HTMLElement {
   connectedCallback() {
+    // Shadow DOM үүсгэх
     if (!this.shadowRoot) {
       this.attachShadow({ mode: 'open' });
     }
-    // Append template content
+    // filterTemplate-г хуулж аван shadowRoot-д нэмэх
     this.shadowRoot.appendChild(filterTemplate.content.cloneNode(true));
 
-    // Attach event listeners for checkboxes within the shadow DOM.
+    // shadowRoot доторх checkbox-н change эвентыг сонсож, URL query-г шинэчилнэ
     const checkboxes = this.shadowRoot.querySelectorAll(".filter-checkbox");
     checkboxes.forEach((checkbox) => {
       checkbox.addEventListener("change", () => {
@@ -391,18 +415,20 @@ class FilterList extends HTMLElement {
           params.delete(checkbox.id);
         }
         params.set("page", "1");
+        // URL-ийг replaceState ашиглан шинэчилж, applyFiltersFromQuery() дуудаж байна
         window.history.replaceState({}, "", `?${params.toString()}`);
         applyFiltersFromQuery();
       });
     });
 
-    // Attach listener for the clear filters button.
+    // "Clear Filters" товч (shadowRoot дотор) дарсан үед бүх шүүлтүүрийг цэвэрлэх
     const clearBtn = this.shadowRoot.getElementById("clear-filters");
     if (clearBtn) {
       clearBtn.addEventListener("click", () => {
-        // Reset checkboxes in shadow DOM.
+        // shadowRoot дахь checkbox-уудыг reset
         const checkboxes = this.shadowRoot.querySelectorAll(".filter-checkbox");
         checkboxes.forEach((cb) => cb.checked = false);
+
         const params = new URLSearchParams(window.location.search);
         params.delete("search");
         Array.from(params.keys()).forEach((key) => params.delete(key));
@@ -412,7 +438,7 @@ class FilterList extends HTMLElement {
       });
     }
 
-    // Attach event listener for the clear cart button.
+    // "Clear Cart" товч дарахад clearCart() дуудах
     const clearCartButton = this.shadowRoot.getElementById("clear-cart-button");
     if (clearCartButton) {
       clearCartButton.addEventListener("click", () => {
@@ -420,7 +446,7 @@ class FilterList extends HTMLElement {
       });
     }
 
-    // Listen for global "cart-updated" events to update the cart total in the aside.
+    // cart-updated эвентэд сонсогч нэмж, subtotal-ыг cart-total-display-д харуулна
     document.addEventListener('cart-updated', (e) => {
       const cartTotalDisplay = this.shadowRoot.getElementById("cart-total-display");
       if (cartTotalDisplay && e.detail && typeof e.detail.subtotal !== 'undefined') {
@@ -430,4 +456,5 @@ class FilterList extends HTMLElement {
   }
 }
 
+// "filter-list" нэртэй custom element болгон бүртгэнэ
 customElements.define("filter-list", FilterList);

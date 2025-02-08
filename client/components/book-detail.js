@@ -1,44 +1,60 @@
-import { renderCart } from '../components/shopping-cart.js'; // Сагсны UI-г шинэчлэх
+import { renderCart } from '../components/shopping-cart.js'; // Сагсны UI-г шинэчлэх зориулалттай функц
 import { CartService } from '../js/cart-service.js';
 
 class BookDetail extends HTMLElement {
   constructor() {
     super();
-    // Attach an open shadow DOM.
+    // Shadow DOM үүсгэх (open горимтой)
     this.attachShadow({ mode: 'open' });
+
+    // Энэ элемент дээр үзүүлэх номын мэдээлэл
     this.book = null;
   }
 
   async connectedCallback() {
-    // Read the book ID from the URL.
+    /**
+     * connectedCallback():
+     * - <book-detail> элементийг DOM-д нэмэгдэнгүүт автоматаар дуудагдана.
+     * - URL-ээс "id" параметрыг уншиж, тухайн номыг window.books-оос хайна.
+     */
+
+    // 1) URL параметрийн 'id'-г унших
     const params = new URLSearchParams(window.location.search);
     const bookId = parseInt(params.get("id"), 10);
 
-    // If the global window.books is not yet populated, wait a bit and try again.
+    // 2) Хэрэв window.books глобал массиваар номын өгөгдөл хараахан ачаалагдаагүй байвал дахин оролдоно
     if (!window.books || window.books.length === 0) {
+      // 100 миллисекунд хүлээгээд, дахин connectedCallback() дуудах
       setTimeout(() => this.connectedCallback(), 100);
       return;
     }
 
-    // Find the book by its ID.
+    // 3) Номын ID-г массив дотроос хайх
     const found = window.books.find(b => b.id === bookId);
     if (!found) {
+      // Хэрэв олдохгүй бол алдааны UI-г үзүүлэх
       this.renderError();
       return;
     }
     this.book = found;
 
-    // Dispatch an event (e.g. to update the page title)
+    // 4) "bookloaded" гэдэг CustomEvent зарлаж, номын гарчгийг дамжуулах
+    // (Жишээ нь: document.addEventListener('bookloaded', ...) хийхэд ашиглаж болно)
     this.dispatchEvent(new CustomEvent("bookloaded", {
       bubbles: true,
       composed: true,
       detail: { title: this.book.title }
     }));
 
+    // 5) Номын мэдээллийг дэлгэцэд үзүүлэх
     this.render();
   }
 
   renderError() {
+    /**
+     * - Хэрэв ном олдохгүй бол Shadow DOM дотроо алдааны HTML-ийг оруулж харагдуулах
+     * - 404 гэсэн текст, буцах товч зэрэг UI
+     */
     this.shadowRoot.innerHTML = `
       <style>
         :host {
@@ -86,9 +102,13 @@ class BookDetail extends HTMLElement {
   }
 
   render() {
+    /**
+     * - Хэрэв this.book байхгүй бол юу ч хийхгүй буцах
+     * - Номын мэдээллийг HTML-д оруулж, Shadow DOM дотор HTML & CSS зурах
+     */
     if (!this.book) return;
 
-    // Create a book object with fallback values.
+    // 1) Номын өгөгдлийг fallback-тайгаар нэг объект болгон бэлдэх
     const book = {
       title: this.book.title,
       author: this.book.author,
@@ -106,7 +126,6 @@ class BookDetail extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>
-        @import url('https://fonts.googleapis.com/css2?family=Finlandica&display=swap');
         @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
         * {
           margin: 0; 
@@ -160,19 +179,16 @@ class BookDetail extends HTMLElement {
         .solo-book-highlight {
           font-weight: bold;
           font-size: 36px;
-          
         }
         .solo-book-title {
             font-size: 60px;
             font-weight: bold;
         }
-
         .solo-book-details {
             display: flex;
             flex-direction: row;
             column-gap: 180px;
         }
-
         .solo-book-text{
             font-size: 36px;
         }
@@ -276,10 +292,14 @@ class BookDetail extends HTMLElement {
       </main>
     `;
 
-    // Attach event listeners.
+    // 3) Дотроо Add to Cart болон Буцах товчнуудад eventListener залгах
     const addCartBtn = this.shadowRoot.querySelector('.solo-add-cart');
     if (addCartBtn) {
       addCartBtn.addEventListener('click', () => {
+        /**
+         * - 'САГСЛАХ' товч дарахад CartService ашиглан тухайн номыг 1 ширхэгээр нэмнэ.
+         * - Дараа нь renderCart() байвал сагсны UI-г шинэчилнэ.
+         */
         const items = CartService.getItems();
         CartService.updateQuantity(items, this.book.id, 1);
         if (typeof renderCart === 'function') {
@@ -287,6 +307,8 @@ class BookDetail extends HTMLElement {
         }
       });
     }
+
+    // 4) "Буцах" товч (id="backBtn") дээр дарвал түүхэнд буцах
     const backBtn = this.shadowRoot.querySelector('#backBtn');
     if (backBtn) {
       backBtn.addEventListener('click', () => window.history.back());
@@ -294,4 +316,5 @@ class BookDetail extends HTMLElement {
   }
 }
 
+// <book-detail> custom element болгон бүртгэх
 customElements.define('book-detail', BookDetail);

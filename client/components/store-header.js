@@ -1,47 +1,45 @@
 class StoreHeader extends HTMLElement {
   constructor() {
     super();
+    // Shadow DOM үүсгэж, style болон HTML-ээ тусгаарлаж байна
     this.attachShadow({ mode: 'open' });
   }
 
   connectedCallback() {
-    this.render();
-    this.setupTheme();
+    // connectedCallback(): элемент DOM-д орж ирмэгц автоматаар дуудагдана
+    this.render();      // render() - оор HTML-ээ оруулж зурна
+    this.setupTheme();  // dark/light mode-г эхлээд тааруулна
   }
 
   setupTheme() {
-    // Check the system's color scheme
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // localStorage-оос theme авна, байхгүй бол системийн сонголтоор сонгоно
     const savedTheme = localStorage.getItem('theme') || (prefersDark ? 'dark' : 'light');
+    // HTML үндсэн элементэд data-theme аттрибут тавьж байна
     document.documentElement.setAttribute('data-theme', savedTheme);
 
+    // shadowRoot дотроос themeIcon (moon/sun icon) олж, одоогийн theme-д тохируулна
     const themeIcon = this.shadowRoot.querySelector('.theme-toggle i');
     if (savedTheme === 'light') {
       themeIcon.className = 'fa-solid fa-moon';
     } else {
       themeIcon.className = 'fa-solid fa-sun';
     }
-
-    // Listen for system changes if the user hasn't explicitly chosen a theme
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      if (!localStorage.getItem('theme')) {
-        const newTheme = e.matches ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', newTheme);
-        themeIcon.className = newTheme === 'light' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
-      }
-    });
   }
 
   toggleTheme() {
+    // Одоогийн theme-г light/dark гэж уншиж, сэлгэнэ
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    // documentElement дээр data-theme аттрибутыг шинэчилж, localStorage-д хадгална
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme);
+
+    // icon-г мөн moon/sun гэж тааруулна
     const themeIcon = this.shadowRoot.querySelector('.theme-toggle i');
     themeIcon.className = newTheme === 'light' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
   }
 
-  // Dispatch a custom event to toggle the cart.
+  // toggle-cart эвент dispatch: сагсны UI-г нээж/хаахад ашиглах
   dispatchToggleCartEvent() {
     const event = new CustomEvent('toggle-cart', {
       bubbles: true,
@@ -51,6 +49,7 @@ class StoreHeader extends HTMLElement {
   }
 
   render() {
+    // shadowRoot.innerHTML-д Header-ийн HTML + style оруулна
     this.shadowRoot.innerHTML = `
       <style>
         @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
@@ -63,7 +62,7 @@ class StoreHeader extends HTMLElement {
           align-items: center;
         }
         a {
-          text-decoration: none; /* Underline арилгах */
+          text-decoration: none;
           color: inherit; 
         }
         a:visited {

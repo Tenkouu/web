@@ -4,11 +4,12 @@ class AdminBooks extends HTMLElement {
   constructor() {
     super();
     this.localBooksPerPage = 5;
+  
+    // Add/Edit формын төлөв 
+    this.showForm = false; // showForm: Форм харагдах/харагдахгүй эсэхийг илэрхийлэх boolean утга
+    this.editingBook = null; // editingBook: Одоогоор засварлаж буй номын объект (null бол засварлах горимд биш)
+    this.errorMessage = null; // errorMessage: Алдаа гарсан үед энэ хувьсагчид алдааны мэдээлэл хадгалагдана
 
-    // Add/Edit формын төлөв
-    this.showForm = false; 
-    this.editingBook = null;
-    this.errorMessage = null; 
   }
 
   connectedCallback() {
@@ -19,12 +20,27 @@ class AdminBooks extends HTMLElement {
     // 1) URL-аас page=? параметр унших эсвэл анхдагч утга 1-г тохируулах
     const params = new URLSearchParams(window.location.search);
     window.currentPage = parseInt(params.get("page"), 10) || 1;
+    /**
+     * window.currentPage:
+     * - Глобал хувьсагч, "page" query param-аас авсан утгыг тоон хэлбэрт шилжүүлж оноож байна.
+     * - Хэрэв query param байхгүй бол 1-р хуудас гэж үзнэ.
+     */
 
     // 2) Pagination солигдох үед renderBooks-г дуудах
     window.onPaginationChange = () => this.renderBooks();
+    /**
+     * window.onPaginationChange:
+     * - Бусад газар (жишээ нь pagination-control.js) дээрээс хуудас солигдоход энэ функцыг дуудах болно.
+     * - Ингэснээр шинэ хуудсанд таарсан номыг дахин зурна.
+     */
 
     // 3) Шаардлагатай бол номын мэдээллийг ачаалах
     await this.fetchBooksIfNeeded();
+    /**
+     * fetchBooksIfNeeded():
+     * - window.books массив хоосон эсэхийг шалгаад,
+     *   хоосон байвал BookService ашиглан /api/books-ээс ном татаж авна.
+     */
 
     // 4) Эхний хуудсыг харуулах
     this.renderBooks();
@@ -33,6 +49,10 @@ class AdminBooks extends HTMLElement {
 
   async fetchBooksIfNeeded() {
     try {
+      /**
+       * - Хэрэв window.books байхгүй, эсвэл массив биш, эсвэл урт нь 0 бол 
+       *   BookService.getBooks() дуудлага хийж, серверээс ном татах.
+       */
       if (!window.books || !Array.isArray(window.books) || window.books.length === 0) {
         const result = await BookService.getBooks(); 
         // Шууд массив эсвэл { books: [...] } хэлбэртэй өгөгдөлд хариу өгөх
@@ -54,12 +74,20 @@ class AdminBooks extends HTMLElement {
 
 
   updateTotalPages() {
+    /**
+     * - window.books.length = нийт номын тоо
+     * - localBooksPerPage = нэг хуудсанд харуулах дундаж тоо
+     * - totalPages = нийт хэдэн хуудас болохыг тооцдог.
+     */
     const total = (window.books || []).length; // Нийт номын тоог олох
     window.totalPages = Math.ceil(total / this.localBooksPerPage); // Нийт хуудсыг тооцоолох
   }
 
 
   renderBooks() {
+    /**
+     * - Номыг HTML хэлбэрт хөрвүүлэн шууд this.innerHTML-д оноод, дүрсэлнэ.
+     */
     if (!window.books || !Array.isArray(window.books)) {
       this.innerHTML = `<p>Номын мэдээлэл ачаалж байна эсвэл хоосон байна...</p>`;
       return;
@@ -99,6 +127,11 @@ class AdminBooks extends HTMLElement {
         </div>
       `)
       .join("");
+    /**
+     * - Array.map(...) ашиглан booksOnPage дахь ном бүрийг <div>..</div> хэлбэрт оруулж байна.
+     * - onclick дотор document.querySelector('admin-books').editBook(...) гэх мэт function call байна.
+     *   Энэ нь уг админы компонентоос өөрийнх нь функцийг дуудах хэрэгсэл.
+     */
 
     // Форм нээгдсэн бол overlay үүсгэх
     let formOverlayHTML = "";
@@ -119,6 +152,7 @@ class AdminBooks extends HTMLElement {
       ${formOverlayHTML}
     `;
 
+    // Хэрэв renderPagination функц тодорхойлогдсон байвал дуудах
     if (typeof window.renderPagination === "function") {
       window.renderPagination();
     }
@@ -128,6 +162,11 @@ class AdminBooks extends HTMLElement {
 
 
   injectStyles() {
+    /**
+     * - admin-books-overlay-style гэдэг ID-тэй <style> таг аль хэдийн нэмэгдсэн эсэхийг шалгана.
+     * - Хэрэв байхгүй бол шинээр үүсгэж, толгой хэсэг (document.head)-т нэмнэ.
+     * - Ингэж байж формын background, overlay, бусад CSS-ийг dynamically оруулдаг.
+     */
     const styleId = "admin-books-overlay-style";
     if (!document.getElementById(styleId)) {
       const styleTag = document.createElement("style");
@@ -216,6 +255,11 @@ class AdminBooks extends HTMLElement {
 
 
   toggleForm() {
+    /**
+     * showForm утгыг true/false болгож солих аргаар формыг нээх/хаах үйлдэл
+     * Хэрэв showForm = false болж хаагдвал editingBook, errorMessage-ийг null болгож байна.
+     * Дараа нь renderBooks()-г дахин дуудаж, дэлгэц дээрх төлөвийг шинэчилнэ.
+     */
     this.showForm = !this.showForm;
     if (!this.showForm) {
       this.editingBook = null;
@@ -226,6 +270,11 @@ class AdminBooks extends HTMLElement {
 
 
   async editBook(bookId) {
+    /**
+     * - editBook(bookId):
+     *   Номын ID-гаар BookService.getBookById(...) дуудна.
+     *   Амжилттай бол editingBook-д хадгалж, form-оо нээнэ.
+     */
     try {
       const book = await BookService.getBookById(bookId);
       this.editingBook = book;
@@ -239,6 +288,12 @@ class AdminBooks extends HTMLElement {
   }
 
   async handleDeleteBook(bookId) {
+    /**
+     * - Ном устгах товч дарах үед дуудагддаг.
+     * - confirm() ашиглан хэрэглэгчээс баталгаажуулалт авна.
+     * - OK бол BookService.deleteBook(bookId) гүйцэтгэнэ.
+     * - Амжилттай бол номын жагсаалтыг дахин татах, renderBooks() дуудах.
+     */
     if (!confirm("Та энэ номыг устгах уу?")) return;
     try {
       await BookService.deleteBook(bookId);
@@ -252,6 +307,12 @@ class AdminBooks extends HTMLElement {
 
  
   getFormTemplate(book) {
+    /**
+     * - Энэ функц нь Add/Edit формын HTML-ийг үүсгэж буцаана.
+     * - book байх үед "Ном засах", байхгүй бол "Ном нэмэх" гэж гарчигт бичигдэнэ.
+     * - input талбарууд нь book-н утгыг default value болгон авна.
+     * - onsubmit-д handleFormSubmit(...) зааж өгчээ.
+     */
     const isEditing = !!book;
     return `
       <div class="admin-book-form-container">
@@ -330,6 +391,10 @@ class AdminBooks extends HTMLElement {
   async handleFormSubmit(event) {
     event.preventDefault();
     const formData = new FormData(event.target); // Формын өгөгдлийг авах
+    /**
+     * - FormData ашиглан бүх input талбараас утгыг цуглуулна.
+     * - parseInt, parseFloat хийж төрөл зөв болгоно.
+     */
     const bookData = { 
       id: parseInt(formData.get("id")),
       title: formData.get("title"),
@@ -347,13 +412,15 @@ class AdminBooks extends HTMLElement {
       rating: parseFloat(formData.get("rating")) || 0,
       reviews: parseInt(formData.get("reviews")) || 0,
       in_stock: formData.get("in_stock") === "true",
-     };
+    };
 
     try {
       if (this.editingBook) {
-        await BookService.updateBook(this.editingBook.id, bookData); // Ном шинэчлэх
+        // Ном шинэчлэх
+        await BookService.updateBook(this.editingBook.id, bookData);
       } else {
-        await BookService.addBook(bookData); // Шинэ ном нэмэх
+        // Шинэ ном нэмэх
+        await BookService.addBook(bookData);
       }
 
       this.showForm = false;
@@ -372,3 +439,8 @@ class AdminBooks extends HTMLElement {
 
 // Custom element бүртгэх
 customElements.define("admin-books", AdminBooks);
+/**
+ * - Эцэст нь "admin-books" гэдэг нэртэй Custom Element-ийг бүртгэж байна.
+ * - Ингэснээр HTML дээр <admin-books></admin-books> гэж бичихэд
+ *   энэхүү классын logic ажиллана.
+ */

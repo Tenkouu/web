@@ -1,19 +1,19 @@
-import { CartService } from '../js/cart-service.js';
+import { CartService } from '../js/cart-service.js'; 
+// CartService-г ашиглаж localStorage дахь сагсны өгөгдөлтэй харьцана
 
 /**
- * Add a book to the cart.
- * @param {number} bookId - The book's ID.
+ * addToCart(bookId):
+ * - Номын ID-г 1 ширхгээр сагсанд нэмэх
  */
 function addToCart(bookId) {
-  const items = CartService.getItems();
+  const items = CartService.getItems(); 
   CartService.updateQuantity(items, bookId, 1);
   renderCart();
 }
 
 /**
- * Update the quantity of a book in the cart.
- * @param {number} bookId - The book's ID.
- * @param {number} delta - The change in quantity (-1 or +1).
+ * updateCartItem(bookId, delta):
+ * - Номын тоо ширхгийг delta (/+1, -1/) аар шинэчилнэ
  */
 function updateCartItem(bookId, delta) {
   const items = CartService.getItems();
@@ -22,8 +22,9 @@ function updateCartItem(bookId, delta) {
 }
 
 /**
- * Render the shopping cart UI inside the <shopping-cart> element.
- * Also, dispatch a "cart-updated" custom event with the new subtotal.
+ * renderCart():
+ * - <shopping-cart> элементэд сагсны UI-г зурах
+ * - "cart-updated" гэх custom эвент dispatch хийж бусад компонентэд мэдэгдэнэ
  */
 function renderCart() {
   const shoppingCartEl = document.querySelector("shopping-cart");
@@ -31,6 +32,7 @@ function renderCart() {
     console.error("Error: 'shopping-cart' element not found.");
     return;
   }
+  // -> Shadow DOM ашигладаг тул shadowRoot дотороос хайна (✔ Shadow DOM requirement)
   const cartContainer = shoppingCartEl.shadowRoot.getElementById("cart-container");
   if (!cartContainer) {
     console.error("Error: 'cart-container' not found in shadow DOM.");
@@ -43,7 +45,7 @@ function renderCart() {
   if (!cartItems || cartItems.length === 0) {
     cartContainer.querySelector(".cart-items").innerHTML = `<p>Таны сагс хоосон байна.</p>`;
     if (subtotalElem) subtotalElem.textContent = "0₮";
-    // Dispatch event with subtotal 0.
+    // -> "cart-updated" custom эвент ашиглаж байна 
     document.dispatchEvent(new CustomEvent('cart-updated', {
       bubbles: true,
       composed: true,
@@ -52,6 +54,7 @@ function renderCart() {
     return;
   }
   
+  // -> array.reduce(...) ашиглаж нийт үнэ бодож байна 
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   
   const itemsHTML = cartItems.map(item => `
@@ -78,7 +81,7 @@ function renderCart() {
   cartContainer.querySelector(".cart-items").innerHTML = itemsHTML;
   if (subtotalElem) subtotalElem.textContent = `${subtotal}₮`;
   
-  // Dispatch a custom event so other components (e.g., store-header) can update accordingly.
+  // -> "cart-updated" эвент (✔ CustomEvent, communication between components)
   document.dispatchEvent(new CustomEvent('cart-updated', {
     bubbles: true,
     composed: true,
@@ -86,7 +89,7 @@ function renderCart() {
   }));
 }
 
-// Expose global functions.
+// -> Глобал функц болгож байна (✔ module usage)
 window.addToCart = addToCart;
 window.updateCartItem = updateCartItem;
 window.renderCart = renderCart;
@@ -94,9 +97,11 @@ export { renderCart };
 
 class ShoppingCart extends HTMLElement {
   connectedCallback() {
+    // -> connectedCallback: <shopping-cart> DOM-д орох үед автоматаар дуудагдана
     if (!this.shadowRoot) {
       this.attachShadow({ mode: 'open' });
     }
+    // -> Shadow DOM дотор HTML, CSS байрлуулж байна (✔ Shadow DOM usage)
     this.shadowRoot.innerHTML = `
       <style>
         @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
@@ -203,15 +208,18 @@ class ShoppingCart extends HTMLElement {
       </div>
     `;
     
-    // Listen for the custom "toggle-cart" event.
+    // -> "toggle-cart" эвентэд сонсогч: бусад газар document.dispatchEvent(new CustomEvent('toggle-cart')) 
+    //   хийж сагсны UI-г нээх/хаах
     document.addEventListener('toggle-cart', () => {
       const cartContainer = this.shadowRoot.getElementById("cart-container");
       cartContainer.classList.toggle("hidden");
       document.body.classList.toggle("no-scroll");
     });
     
+    // Эхний удаад renderCart() дуудаж, сагсыг зурна
     renderCart();
   }
 }
 
+// <shopping-cart> гэдэг custom element болгон бүртгэж байна
 customElements.define("shopping-cart", ShoppingCart);

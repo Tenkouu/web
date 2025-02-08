@@ -1,48 +1,38 @@
-import { CartService } from '../js/cart-service.js'; // Сагстай харилцах үйлчилгээ
+import { CartService } from '../js/cart-service.js'; 
 
-//
-// 1) A small wrapper custom element <book-card-wrapper>
-//    This will toggle a custom state "seen" once clicked,
-//    so we can style it with :state(seen).
-//
 class BookCardWrapper extends HTMLElement {
   constructor() {
     super();
-    // Attach elementInternals if browser supports it
-    if ('attachInternals' in this) {
-      this._internals = this.attachInternals();
-    }
+    // attachInternals ашиглаж, бүх орчинд дэмжлэгтэй гэж үзэж байна.
+    // Энэ нь уг элементийн дотоод төлөв (states)-г удирдах боломж олгодог.
+    this._internals = this.attachInternals();
   }
 
   connectedCallback() {
-    // Check localStorage to see if this book was previously "seen"
+    // Энэ функц нь элемент DOM-д байрлах үед автоматаар дуудагдана.
+    
+    // 1. data-book-id аттрибутын утгыг уншиж байна (энэ нь тухайн номын ID байна).
     const bookId = this.getAttribute('data-book-id');
+    
+    // 2. localStorage-аас тухайн номыг өмнө нь хэрэглэгч "харсан" эсэхийг шалгаж байна.
+    // Хэрэв localStorage-д "seenBook-<bookId>" түлхүүрийн утга "true" бол энэ номыг өмнө нь харсан гэж үзнэ.
     const wasSeen = localStorage.getItem(`seenBook-${bookId}`) === 'true';
-
-    // If already seen, add the custom state (or fallback class)
+    
+    // 3. Хэрэв өмнө нь харсан бол "seen" төлөвийг идэвхжүүлнэ.
     if (wasSeen) {
       this._setSeenState(true);
     }
 
-    // When user clicks anywhere in this wrapper, set "seen"
+    // Бүхэл wrapper-д дарсан тохиолдолд "seen" төлөвийг идэвхжүүлэх
     this.addEventListener('click', () => {
-      // Mark in localStorage
       localStorage.setItem(`seenBook-${bookId}`, 'true');
-      // Toggle the state
       this._setSeenState(true);
     });
   }
 
   _setSeenState(enable) {
-    if (!this._internals) {
-      // Fallback for browsers that do not support states:
-      if (enable) {
-        this.classList.add('seen');
-      } else {
-        this.classList.remove('seen');
-      }
-      return;
-    }
+    // enable=true бол "seen" төлөвийг идэвхжүүлнэ,
+    // enable=false бол "seen" төлөвийг устгана.
     if (enable) {
       this._internals.states.add('seen');
     } else {
@@ -51,43 +41,32 @@ class BookCardWrapper extends HTMLElement {
   }
 }
 
-// Register the wrapper element
+// book-card-wrapper гэдэг нэртэй custom element болгон бүртгэж байна
 customElements.define('book-card-wrapper', BookCardWrapper);
 
-//
-// 2) We add a global style for :state(seen).
-//    This does NOT override your existing CSS; it just
-//    adds a red border if the wrapper is in state(seen).
-//
+// styleTag гэдэг <style> таг үүсгэн, document.head руу нэмнэ
 const styleTag = document.createElement('style');
 styleTag.textContent = `
-/* 
-  If the <book-card-wrapper> is in :state(seen),
-  let's force its .book-card child to have a red border.
-  This won't break your existing .book-card styles.
-*/
 book-card-wrapper:state(seen) .book-card {
   border: 2px solid orange !important;
 }
-
 `;
 document.head.appendChild(styleTag);
 
-//
-// 3) The original "renderBooks" function, mostly unchanged.
-//
+// renderBooks: Номын массивыг авч, DOM дээр bookGrid дотор HTML-ээр үзүүлэх функц
 function renderBooks(bookList) {
   const bookGrid = document.getElementById("book-grid");
+  // Хэрэв book-grid элемент олдохгүй бол консолд мэдээлж return
   if (!bookGrid) {
     console.error("Алдаа: 'book-grid' элемент DOM-д олдсонгүй.");
     return;
   }
 
-  // Номын жагсаалтыг HTML-ээр харуулах
+  // bookList массив хоосон биш бол map ашиглан тус бүрийг HTML рүү хөрвүүлнэ, эс бөгөөс "Ном алга" гэдэг бичиг гаргана
   bookGrid.innerHTML = bookList.length
     ? bookList
-        .map((book) => {
-          // Үнэлгээ эсвэл дүнг тооцоолох, байхгүй бол 0-г сонгох
+        .map((book) => { // -> array.map(...) ашиглаж байна
+          // ratingValue: номд "review" эсвэл "rating" талбар байвал parseFloat хийж авч, байхгүй бол 0
           const ratingValue = parseFloat(
             book.review !== undefined
               ? book.review
@@ -96,8 +75,7 @@ function renderBooks(bookList) {
               : "0"
           ) || 0;
 
-          // We wrap the entire .book-card inside <book-card-wrapper>.
-          // That wrapper is what toggles the :state(seen) or .seen class.
+          // <book-card-wrapper data-book-id="..."> дотор .book-card-аа байршуулна
           return `
             <book-card-wrapper data-book-id="${book.id}">
               <div class="book-card">
@@ -135,49 +113,41 @@ function renderBooks(bookList) {
         .join("")
     : `<p class="not-available">Номын мэдээлэл алга байна</p>`;
 
-  // (Unchanged snippet) for adding to cart from .add-to-cart if you had that:
+  // ".add-to-cart" класстай товчнууд дээр listener нэмнэ (fallback)
   document.querySelectorAll('.add-to-cart').forEach(button => {
     button.addEventListener('click', (event) => {
       const bookId = parseInt(event.target.dataset.id, 10);
       const book = bookList.find(b => b.id === bookId);
       if (book) {
-        CartService.addToCart(book); // Сагсанд нэмэх
+        CartService.addToCart(book);
       }
     });
   });
 }
-
-// Make renderBooks globally accessible
+// renderBooks функцыг глобал болгож, өөр газраас дуудах боломжтой
 window.renderBooks = renderBooks;
 
-//
-// 4) <book-list> custom element, unchanged from your code.
-//
+// BookList гэдэг custom element
 class BookList extends HTMLElement {
   connectedCallback() {
+    // connectedCallback() үед #book-grid бүхий <section> үүсгэж байна
     this.innerHTML = `
       <section id="book-grid" class="book-grid"></section>
     `;
   }
 }
 
-/**
- * Номын дэлгэрэнгүй мэдээлэл рүү шилжих функц
- * @param {number} bookId Номын ID
- */
+// goToDetail(bookId): тухайн номын book-detail.html?id=... руу шилжих туслах функц
 function goToDetail(bookId) {
-  window.location = `book-detail.html?id=${bookId}`; // Номын дэлгэрэнгүй хуудас руу чиглүүлэх
+  window.location = `book-detail.html?id=${bookId}`;
 }
-
-// Make goToDetail globally accessible
 window.goToDetail = goToDetail;
 
-// Register the <book-list> element
+// book-list нэрээр custom element бүртгэнэ
 customElements.define("book-list", BookList);
 
-// Also expose addToCart if that was in your global scope
-// (If you're already exporting or exposing it, ignore this)
+// addToCart: сагсанд ном нэмэх функц, CartService ашиглана
 window.addToCart = function(bookId) {
   const items = CartService.getItems();
-  CartService.updateQuantity(items, bookId, 1);
+  CartService.updateQuantity(items, bookId, 1); // -> CartService ашиглаж бусад компоненттэй холбоотой үйлдэл хийж байна
 };

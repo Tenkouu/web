@@ -131,8 +131,8 @@
     }
 
     .icon-button {
-        background-color: var(--text-color);
-        color: var(--bg-color);
+        background: linear-gradient(to right, #ffa500, #ff7500);
+        color: #fff;
         height: 55px;
         width: 55px;
         border-radius: 10px;
@@ -144,6 +144,37 @@
     }
 
 /* index.html */
+    @keyframes slideInOutAd {
+        0% {
+        transform: translateX(100%); /* start off screen to the right */
+        opacity: 0;
+        }
+        10% {
+        transform: translateX(0);    /* now on screen */
+        opacity: 1;
+        }
+        90% {
+        transform: translateX(0);    /* stay on screen until near the end */
+        opacity: 1;
+        }
+        100% {
+        transform: translateX(100%); /* slide off to the right again */
+        opacity: 0;
+        }
+    }
+
+    .ad-image {
+        margin-top: 35px;
+        margin-bottom: 35px;
+        width: 100%;
+        object-fit: cover;
+        animation-name: slideInOutAd;
+        animation-duration: 30s;        /* total time for the effect */
+        animation-timing-function: ease-in-out; /* speed curve */
+        animation-fill-mode: infinite;  
+    }
+  
+
     .centerfold {
         display: flex;
         flex-direction: row;
@@ -274,18 +305,16 @@
         border-radius: 10px;
         overflow: hidden;
         flex: none;
+        box-shadow: 10px 0px 1px #3a3a3a;
+        margin-bottom: 10px;
+
     }
 
     .last {
         margin-right: 52px;
     }
 
-    .ad-image {
-        margin-top: 35px;
-        margin-bottom: 35px;
-        width: 100%;
-        object-fit: cover;
-    }
+    
 
     .category-article {
         margin-left: 52px;

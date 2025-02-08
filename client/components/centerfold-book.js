@@ -1,29 +1,20 @@
 // client/components/centerfold-book.js
 
-import { CartService } from '../js/cart-service.js';
-// import { renderCart } from './shopping-cart.js'; // if needed
+import { CartService } from '../js/cart-service.js'; 
+// -> ES Module ашиглаж буй мөр, cart-service.js-оос CartService импортолж байна
 
-/**
- * <centerfold-book book-id="123"></centerfold-book>
- * 
- *  - Dynamically shows a "centerfold" section, styled via your global `.centerfold` CSS.
- *  - Observes changes to [book-id] attribute; re-renders if updated.
- */
 class CenterfoldBook extends HTMLElement {
+  // -> Компонентдоо аттрибутын өөрчлөлтийг ажиглахыг зааж байна (book-id)
   static get observedAttributes() {
     return ['book-id'];
   }
 
   constructor() {
     super();
-    /**
-     * By default, we do NOT attach a Shadow DOM so that
-     * your global CSS classes like .centerfold, .solo-book-title, etc.
-     * can style this element.
-     */
+    // Shadow DOM хэрэглэж болох ч энэ жишээнд хэрэглээгүй (global CSS-т найдаж байна)
   }
 
-  // A property "bookId" that reflects to the attribute "book-id"
+  // -> get/set нь property ба аттрибутын хооронд шууд холбоо үүсгэж байна
   get bookId() {
     return this.getAttribute('book-id');
   }
@@ -36,26 +27,25 @@ class CenterfoldBook extends HTMLElement {
   }
 
   connectedCallback() {
-    // Once connected, load the current book
+    // Элемент DOM-д нэмэгдэх үед автоматаар дуудагдана
     this.updateBook();
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
+    // -> Аттрибут book-id солигдоход энэ функц дуудна, тэгээд updateBook()
     if (name === 'book-id' && oldVal !== newVal) {
       this.updateBook();
     }
   }
 
-  /**
-   * Looks up the book in `window.books` using the given bookId,
-   * then calls render().
-   */
+  // updateBook(): bookId-г үндэслэн window.books-оос ном хайж, render(...)-т илгээнэ
   updateBook() {
     const id = parseInt(this.bookId, 10);
     if (!window.books || window.books.length === 0) {
-        setTimeout(() => this.connectedCallback(), 100);
-        return;
-      }
+      // Хэрэв номын өгөгдөл бэлэн биш бол багахан хугацааны дараа дахин шалгана
+      setTimeout(() => this.connectedCallback(), 100);
+      return;
+    }
     const found = window.books.find(b => b.id === id);
     if (!found) {
       this.innerHTML = `<p>Book with id ${id} not found.</p>`;
@@ -65,7 +55,7 @@ class CenterfoldBook extends HTMLElement {
   }
 
   render(book) {
-    // We rely on your global CSS: .centerfold, .centerfold-content, .solo-book-title, etc.
+    // Энэ элементийн дотор глобал CSS-д нийцэх HTML-ийг оруулна
     this.innerHTML = `
       <article class="centerfold">
         <img src="${book.cover_image}" alt="${book.title}" class="centerfold-image">
@@ -95,20 +85,23 @@ class CenterfoldBook extends HTMLElement {
       </article>
     `;
 
-    // Handle "Add to Cart"
+    // "САГСЛАХ" товч дарахад CartService ашиглаж сагсанд нэмнэ
     const addToCartBtn = this.querySelector('#cfAddToCart');
     if (addToCartBtn) {
       addToCartBtn.addEventListener('click', () => {
-        const items = CartService.getItems();
-        CartService.updateQuantity(items, book.id, 1);
-        // If you use renderCart or dispatch an event:
+        const items = CartService.getItems(); 
+        // -> CartService.getItems() ашиглаж localStorage дээрх сагс татаж байна
+        CartService.updateQuantity(items, book.id, 1); 
+        // -> Өөр компонент/service-тэй холбогдож байгаа жишээ (сагс)
+
         if (typeof window.renderCart === 'function') {
-          window.renderCart();
+          window.renderCart(); 
+          // Хэрэв renderCart() функц байвал сагс UI-г шинэчилнэ
         }
       });
     }
 
-    // Handle "Detail" button -> go to detail page
+    // "ДЭЛГЭРЭНГҮЙ" товч дарахад detail хуудас руу шилжинэ
     const detailBtn = this.querySelector('#cfDetail');
     if (detailBtn) {
       detailBtn.addEventListener('click', () => {
@@ -118,4 +111,5 @@ class CenterfoldBook extends HTMLElement {
   }
 }
 
+// -> <centerfold-book> гэдэг нэртэй custom element болгон бүртгэж байна
 customElements.define('centerfold-book', CenterfoldBook);
